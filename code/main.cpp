@@ -10,70 +10,41 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "airSensor.h"
-#include "waterSensor.h"
-#include "lightSensor.h"
+#include <sys/semaphore.h>
 
-#include "heater.h"
-#include "stepMotor.h"
-#include "LED.h"
-#include "waterPump.h"
+//#include "airSensor.h"
+//#include "waterSensor.h"
+//#include "lightSensor.h"
+
+//#include "heater.h"
+//#include "stepMotor.h"
+//#include "LED.h"
+//#include "waterPump.h"
 
 #define BUFFER_SIZE 8
 
-template <typename BufferType>
-class Buffer {
-private:
-	BufferType* values[BUFFER_SIZE];
-	int addPtr, removePtr;
-public:
-	Buffer(void);
-	~Buffer(void);
-	bool add(BufferType value);
-	bool remove(BufferType* value);
-};
-
-template <typename BufferType>
-Buffer<BufferType>::Buffer(void) {
-	addPtr = 0;
-	removePtr = 0;
+void setPrio(unsigned int priority) {
+	struct sched_param Priority_Param; //struct to set priority
+	int policy = SCHED_FIFO; //kind of policy desired, either SCHED_FIFO or SCHED_RR, otherwise Linux uses SCHED_OTHER
+	pthread_t self_id = pthread_self(); // I ask for the tid..
+	Priority_Param.sched_priority = priority; //.. set the priority (the higher the sooner it is executed, min at 1, max at 99)..
+	if (pthread_setschedparam(self_id, policy, &Priority_Param) != 0) //.. and set the scheduling options.
+	{
+		printf("Error Set Sched\n");
+		perror("");
+		exit(1);
+	}
 }
 
-template <typename BufferType>
-Buffer<BufferType>::~Buffer(void) {}
+/*Semaphores*/
+sem_t semaphoreAirTemperature;
+sem_t semaphoreAirHumidity;
+sem_t semaphoreWaterTemperature;
+sem_t semaphoreLightLevel;
+sem_t semaphorePhotoBuffer;
+sem_t semaphoreProcessedPhotoBuffer;
 
-template <typename BufferType>
-Buffer<BufferType>::add(BufferType value) {
-	if ((addPtr + 1 == removePtr) || (addPtr == BUFFER_SIZE && removePtr == 0))
-		return 0;
-	values[addPtr] = value;
-	addPtr++;
-	if (addPtr == BUFFER_SIZE)
-		addPtr = 0;
-	return 1;
-}
-
-template <typename BufferType>
-Buffer<BufferType>::remove(BufferType* value) {
-	if (addPtr == removePtr)
-		return 0;
-	*value = values[removePtr];
-	removePtr++;
-	if (removePtr == BUFFER_SIZE)
-		removePtr = 0;
-	return 1;
-}
-
-
-int main()
-{
-	cout << myMax<int>(3, 7) << endl;  // Call myMax for int
-	cout << myMax<double>(3.0, 7.0) << endl; // call myMax for double
-	cout << myMax<char>('g', 'e') << endl;   // call myMax for char
-
-	return 0;
-}
-
+/*buffers*/
 Buffer<float> airTemperatureBuffer;
 Buffer<float> airHumidityBuffer;
 Buffer<float> waterTemperatureBuffer;
@@ -81,34 +52,173 @@ Buffer<float> lightLevelBuffer;
 //photoBuffer
 //processedPhotoBuffer
 
+/*Mutexes*/
+pthread_mutex_t mutexTargetMotorPosition;
+pthread_mutex_t mutexTargetHeaterPower;
+pthread_mutex_t mutexTargetLightPower;
+pthread_mutex_t mutexWaterPumpState;
+
+/*Control variables*/
 float targetMotorPosition;
 float targetHeaterPower;
 float targetLightPower;
 float waterPumpState;
 
-
+/*Critical error routine*/
 void panic(char* msg);
 #define panic(m)		{perror(m); abort();}
 
 
 //슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬�
 
-void* taskReadSensors(void);
+void* taskReadSensors(void) {
+	setPrio(unsigned int priority)
 
-void* taskTakePhoto(void);
-void* taskProcessPhoto(void);
+	float airTemperature, airHumidity;
 
-void* taskSendData(void);
-void* taskSendPhoto(void);
+	//read air temperature
 
-void* taskProcessAirTemperature(void);
-void* taskProcessAirHumidity(void);
-void* taskProcessLightLevel(void);
+	//read air humidty
 
-void* taskActuateHeater(void);
-void* taskActuateWindow(void);
-void* taskActuateLight(void);
-void* taskActuateWaterPump(void);
+	sem_wait(&semaphoreAirTemperature);
+		if (!airTemperatureBuffer.add(airTemperature)) {/*buffer full*/ }
+	sem_post(&semaphoreAirTemperature);
+
+	sem_wait(&semaphoreAirHumidity);
+		if (!airHumidityBuffer.add(airHumidity)) {/*buffer full*/ }
+	sem_post(&semaphoreAirHumidity);
+
+	float waterTemperature;
+
+	//read water temperature
+
+	sem_wait(&semaphoreWaterTemperature);
+		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
+	sem_post(&semaphoreWaterTemperature);
+
+	float lightLevel;
+
+	//read light level
+
+	sem_wait(&semaphoreLightLevel);
+		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
+	sem_post(&semaphoreLightLevel);
+
+}
+
+void* taskTakePhoto(void) {}
+void* taskProcessPhoto(void) {}
+
+void* taskSendData(void) {
+
+	float airTemperature, airHumidity;
+
+	sem_wait(&semaphoreAirTemperature);
+	while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
+	sem_post(&semaphoreAirTemperature);
+
+	sem_wait(&semaphoreAirHumidity);
+	while (!airHumidityBuffer.remove(&airHumidity)) {/*buffer empty*/ }
+	sem_post(&semaphoreAirHumidity);
+
+	float waterTemperature;
+
+	sem_wait(&semaphoreWaterTemperature);
+	while (!waterTemperatureBuffer.remove(&waterTemperature)) {/*buffer empty*/ }
+	sem_post(&semaphoreWaterTemperature);
+
+	float lightLevel;
+
+	sem_wait(&semaphoreLightLevel);
+	while (!lightLevelBuffer.remove(&lightLevel)) {/*buffer empty*/ }
+	sem_post(&semaphoreLightLevel);
+
+	//insert in the database
+	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
+	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
+	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
+	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
+}
+void* taskSendPhoto(void) {
+
+	//photo struct
+
+	sem_wait(&semaphoreProcessedPhotoBuffer);
+	while (!lightLevelBuffer.remove(/*//photo struct*/)) {/*buffer empty*/ }
+	sem_post(&semaphoreProcessedPhotoBuffer);
+
+	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
+}
+
+
+void* taskProcessAirTemperature(void) {
+	
+	float airTemperature;
+	float result;
+
+	sem_wait(&semaphoreAirTemperature);
+		while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
+	sem_post(&semaphoreAirTemperature);
+
+	//convert
+
+	pthread_mutex_lock(&mutexTargetHeaterPower);
+		targetHeaterPower = result;
+	pthread_mutex_unlock(&mutexTargetHeaterPower);
+
+}
+
+void* taskProcessAirHumidity(void) {
+
+	float airHumidity;
+	float result;
+
+	sem_wait(&semaphoreAirHumidity);
+	while (!airTemperatureBuffer.remove(&airHumidity)) {/*buffer empty*/ }
+	sem_post(&semaphoreAirHumidity);
+
+	//convert
+
+	pthread_mutex_lock(&mutexTargetMotorPosition);
+	targetMotorPosition = result;
+	pthread_mutex_unlock(&mutexTargetMotorPosition);
+
+}
+
+void* taskProcessLightLevel(void) {
+
+	float airTemperature;
+	float result;
+
+	sem_wait(&semaphoreAirTemperature);
+	while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
+	sem_post(&semaphoreAirTemperature);
+
+	//convert
+
+	pthread_mutex_lock(&mutexTargetHeaterPower);
+	targetHeaterPower = result;
+	pthread_mutex_unlock(&mutexTargetHeaterPower);
+
+}
+
+
+void* taskActuateHeater(void) {
+
+}
+
+void* taskActuateWindow(void) {
+
+}
+
+void* taskActuateLight(void) {
+
+}
+
+void* taskActuateWaterPump(void) {
+
+}
+
 
 void* taskCheckWifiDataReception(void);
 void* taskSetAirTemperature(void);
@@ -131,6 +241,13 @@ void* task2(void* arg) {
 int main(int count, char* args[])
 {
 	//MAIN SETUP
+
+	//declare semaphores
+	if (sem_init(&airTemperatureBuffer, 0, 1); != 0)
+	{
+		// Error: initialization failed
+	}
+	
 
 	pthread_t threadTakePhoto, threadProcessPhoto;
 	pthread_create(&threadTakePhoto, 0, taskTakePhoto, VOID);
