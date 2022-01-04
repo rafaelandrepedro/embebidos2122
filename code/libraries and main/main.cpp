@@ -279,13 +279,9 @@ int main(int count, char* args[])
 	pthread_detach(threadActuateLight);
 	pthread_detach(threadActuateWaterPump);
 
-	pthread_t threadCheckWifiDataReception, threadSetAirTemperature, threadSetAirHumidity;
+	pthread_t threadCheckWifiDataReception;
 	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, VOID);
-	pthread_create(&threadSetAirTemperature, 0, taskSetAirTemperature, VOID);
-	pthread_create(&threadSetAirHumidity, 0, taskSetAirHumidity, VOID);
 	pthread_detach(threadCheckWifiDataReception);
-	pthread_detach(threadSetAirTemperature);
-	pthread_detach(threadSetAirHumidity);
 
 	//###create thread template###
 		//int arguments1 = 0;
