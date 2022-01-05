@@ -1,0 +1,1 @@
+cmd_/home/bruno/code/DeviceDriver/led/led.ko := ~/buildroot/buildroot-cam2/output/host/bin/arm-buildroot-linux-uclibcgnueabihf-ld -r  -EL  --build-id=sha1  -T scripts/module.lds -o /home/bruno/code/DeviceDriver/led/led.ko /home/bruno/code/DeviceDriver/led/led.o /home/bruno/code/DeviceDriver/led/led.mod.o;  true

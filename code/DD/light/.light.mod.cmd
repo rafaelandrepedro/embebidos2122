@@ -1,0 +1,1 @@
+cmd_/home/bruno/code/DeviceDriver/light/light.mod := { echo  /home/bruno/code/DeviceDriver/light/lightmodule.o /home/bruno/code/DeviceDriver/light/utils.o;  echo; } > /home/bruno/code/DeviceDriver/light/light.mod
