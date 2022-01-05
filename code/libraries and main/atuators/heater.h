@@ -9,6 +9,7 @@ class Heater{
 		bool heaterState;
 		int GPIO;
 	public:
+		Heater();
 		Heater(int GPIO);
 		~Heater();
 		void init(int GPIO);

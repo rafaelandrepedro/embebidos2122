@@ -9,6 +9,7 @@ class Light{
 		bool lightState;
 		int GPIO;
 	public:
+		Light();
 		Light(int GPIO);
 		~Light();
 		void init(int GPIO);
