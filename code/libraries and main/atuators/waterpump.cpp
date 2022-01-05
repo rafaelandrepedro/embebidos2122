@@ -1,5 +1,8 @@
 #include "waterpump.h"
 
+WaterPump::WaterPump(){
+}
+
 WaterPump::WaterPump(int GPIO){
 	init(GPIO);
 }
@@ -17,13 +20,13 @@ void WaterPump::init(int GPIO){
 }
 
 void WaterPump::turnOn(){
-	std::string command = "echo 1 > /sys/class/gpio/" + std::to_string(GPIO)+ "/value";
+	std::string command = "echo 1 > /sys/class/gpio/gpio" + std::to_string(GPIO)+ "/value";
 	system(command.c_str());
 	pumpState=1;
 }
 
 void WaterPump::turnOff(){
-	std::string command = "echo 0 > /sys/class/gpio/" + std::to_string(GPIO)+ "/value";
+	std::string command = "echo 0 > /sys/class/gpio/gpio" + std::to_string(GPIO)+ "/value";
 	system(command.c_str());
 	pumpState=0;
 }
