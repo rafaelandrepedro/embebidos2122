@@ -9,8 +9,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <signal.h>
-
-#include <sys/semaphore.h>
+#include <semaphore.h>
+//#include <sys/semaphore.h>
 
 //#include "airSensor.h"
 //#include "waterSensor.h"
