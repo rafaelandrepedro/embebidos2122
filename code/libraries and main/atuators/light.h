@@ -7,6 +7,7 @@
 class Light{
 	private:	
 		bool lightState;
+		int GPIO;
 	public:
 		Light(int GPIO);
 		~Light();

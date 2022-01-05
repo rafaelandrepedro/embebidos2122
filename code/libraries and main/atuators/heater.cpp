@@ -13,6 +13,7 @@ void Heater::init(int GPIO){
 	string command2 = "echo out > /sys/class/gpio/gpio" + std::to_string(GPIO)+ "/direction";
 	system(command1);
 	system(command2);
+	this->GPIO=GPIO;
 }
 
 void Heater::turnOn(){

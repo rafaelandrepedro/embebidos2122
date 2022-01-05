@@ -7,6 +7,7 @@
 class Heater{
 	private:	
 		bool heaterState;
+		int GPIO;
 	public:
 		Heater(int GPIO);
 		~Heater();

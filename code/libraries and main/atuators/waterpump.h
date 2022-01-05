@@ -7,6 +7,7 @@
 class WaterPump{
 	private:	
 		bool pumpState;
+		int GPIO;
 	public:
 		WaterPump(int GPIO);
 		~WaterPump();
