@@ -36,7 +36,7 @@ static struct class *s_pDeviceClass;
 static struct device *s_pDeviceObject;
 struct GpioRegisters *s_pGpioRegisters;
 
-static const int waterpumpGpioPin = 12;
+static const int waterpumpGpioPin = 25;
 
 ssize_t waterpump_device_write(struct file *pfile, const char __user *pbuff, size_t len, loff_t *off) { //tirar o static
 	struct GpioRegisters *pdev; 

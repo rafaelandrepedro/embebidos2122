@@ -1,1 +1,1 @@
-cmd_/home/bruno/code/DeviceDriver/waterpump/modules.order := {   echo /home/bruno/code/DeviceDriver/waterpump/waterpump.ko; :; } | awk '!x[$$0]++' - > /home/bruno/code/DeviceDriver/waterpump/modules.order
+cmd_/home/bruno/embebidos2122/code/DD/waterpump/modules.order := {   echo /home/bruno/embebidos2122/code/DD/waterpump/waterpump.ko; :; } | awk '!x[$$0]++' - > /home/bruno/embebidos2122/code/DD/waterpump/modules.order

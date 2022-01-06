@@ -1,1 +1,1 @@
-cmd_/home/bruno/code/DeviceDriver/light/modules.order := {   echo /home/bruno/code/DeviceDriver/light/light.ko; :; } | awk '!x[$$0]++' - > /home/bruno/code/DeviceDriver/light/modules.order
+cmd_/home/bruno/embebidos2122/code/DD/light/modules.order := {   echo /home/bruno/embebidos2122/code/DD/light/light.ko; :; } | awk '!x[$$0]++' - > /home/bruno/embebidos2122/code/DD/light/modules.order
