@@ -1,0 +1,1 @@
+cmd_/home/bruno/embebidos2122/code/DD/light/light.o := ~/buildroot/buildroot-cam2/output/host/bin/arm-buildroot-linux-uclibcgnueabihf-ld  -EL    -r -o /home/bruno/embebidos2122/code/DD/light/light.o /home/bruno/embebidos2122/code/DD/light/lightmodule.o /home/bruno/embebidos2122/code/DD/light/utils.o

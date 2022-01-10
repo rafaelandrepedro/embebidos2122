@@ -1,0 +1,1 @@
+cmd_/home/bruno/embebidos2122/code/DD/light/Module.symvers := sed 's/ko$$/o/' /home/bruno/embebidos2122/code/DD/light/modules.order | scripts/mod/modpost -m -a   -o /home/bruno/embebidos2122/code/DD/light/Module.symvers -e -i Module.symvers   -T -

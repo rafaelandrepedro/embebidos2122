@@ -31,8 +31,18 @@ void Heater::turnOff(){
 	heaterState=0;
 }
 
+void Heater::set(unsigned int dutycycle){
+	if(dutycycle<=100){
+		std::string command = "echo " + std::to_string(dutycycle);
+		system(command.c_str());
+		turnOn();
+		usleep(dutycycle*1000);
+		turnOff();
+		usleep(100000-dutycycle*1000);
+	}
+}
+
 bool Heater::state(){
 	return heaterState;
 }
 
-#endif
