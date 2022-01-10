@@ -106,50 +106,53 @@ void* taskReadSensors(void) {
 
 }
 
+//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+
 void* taskTakePhoto(void) {}
 void* taskProcessPhoto(void) {}
+
+//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
 void* taskSendData(void) {
 
 	float airTemperature, airHumidity;
 
 	sem_wait(&semaphoreAirTemperature);
-	while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
+		while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
 	sem_post(&semaphoreAirTemperature);
 
 	sem_wait(&semaphoreAirHumidity);
-	while (!airHumidityBuffer.remove(&airHumidity)) {/*buffer empty*/ }
+		while (!airHumidityBuffer.remove(&airHumidity)) {/*buffer empty*/ }
 	sem_post(&semaphoreAirHumidity);
 
 	float waterTemperature;
 
 	sem_wait(&semaphoreWaterTemperature);
-	while (!waterTemperatureBuffer.remove(&waterTemperature)) {/*buffer empty*/ }
+		while (!waterTemperatureBuffer.remove(&waterTemperature)) {/*buffer empty*/ }
 	sem_post(&semaphoreWaterTemperature);
 
 	float lightLevel;
 
 	sem_wait(&semaphoreLightLevel);
-	while (!lightLevelBuffer.remove(&lightLevel)) {/*buffer empty*/ }
+		while (!lightLevelBuffer.remove(&lightLevel)) {/*buffer empty*/ }
 	sem_post(&semaphoreLightLevel);
 
 	//insert in the database
-	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
-	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
-	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
-	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
+
 }
+
 void* taskSendPhoto(void) {
 
 	//photo struct
 
 	sem_wait(&semaphoreProcessedPhotoBuffer);
-	while (!lightLevelBuffer.remove(/*//photo struct*/)) {/*buffer empty*/ }
+		while (!lightLevelBuffer.remove(/*//photo struct*/)) {/*buffer empty*/ }
 	sem_post(&semaphoreProcessedPhotoBuffer);
 
-	INSERT INTO tablename(column1, column2, ...) VALUES(value1, value2, ...);
+	//insert in the database
 }
 
+//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
 void* taskProcessAirTemperature(void) {
 	
@@ -161,6 +164,9 @@ void* taskProcessAirTemperature(void) {
 	sem_post(&semaphoreAirTemperature);
 
 	//convert
+	float Temp_Code = airTemperature;
+	result = (175.72 * Temp_Code / 65536) + 46.85;
+
 
 	pthread_mutex_lock(&mutexTargetHeaterPower);
 		targetHeaterPower = result;
@@ -174,13 +180,15 @@ void* taskProcessAirHumidity(void) {
 	float result;
 
 	sem_wait(&semaphoreAirHumidity);
-	while (!airTemperatureBuffer.remove(&airHumidity)) {/*buffer empty*/ }
+		while (!airTemperatureBuffer.remove(&airHumidity)) {/*buffer empty*/ }
 	sem_post(&semaphoreAirHumidity);
 
 	//convert
+	float RH_Code = airHumidity;
+	result = (125 * RH_Code / 65536) + 6;
 
 	pthread_mutex_lock(&mutexTargetMotorPosition);
-	targetMotorPosition = result;
+		targetMotorPosition = result;
 	pthread_mutex_unlock(&mutexTargetMotorPosition);
 
 }
@@ -190,52 +198,60 @@ void* taskProcessLightLevel(void) {
 	float airTemperature;
 	float result;
 
-	sem_wait(&semaphoreAirTemperature);
-	while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
-	sem_post(&semaphoreAirTemperature);
+	sem_wait(&semaphoreLightLevel);
+		while (!airTemperatureBuffer.remove(&lightLevel)) {/*buffer empty*/ }
+	sem_post(&semaphoreLightLevel);
 
 	//convert
+	float R10 = 15000;	//resistance at 10 lux
+	float R100 = 2500;	//resistance at 100 lux
+	result = 2.7958-log(lightLevel)*1.3979;
 
-	pthread_mutex_lock(&mutexTargetHeaterPower);
-	targetHeaterPower = result;
-	pthread_mutex_unlock(&mutexTargetHeaterPower);
+	pthread_mutex_lock(&mutexTargetLightPower);
+		targetLightPower = result;
+	pthread_mutex_unlock(&mutexTargetLightPower);
 
 }
 
+//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
 void* taskActuateHeater(void) {
+	pthread_mutex_lock(&mutexTargetHeaterPower);
+	targetHeaterPower;
+	pthread_mutex_unlock(&mutexTargetHeaterPower);
+	//
 
 }
 
 void* taskActuateWindow(void) {
+	pthread_mutex_lock(&mutexTargetMotorPosition);
+	targetMotorPosition;
+	pthread_mutex_unlock(&mutexTargetMotorPosition);
+	//
 
 }
 
 void* taskActuateLight(void) {
+	pthread_mutex_lock(&mutexTargetLightPower);
+	targetLightPower;
+	pthread_mutex_unlock(&mutexTargetLightPower);
+	//
 
 }
 
 void* taskActuateWaterPump(void) {
+	pthread_mutex_lock(&mutexWaterPumpState);
+	waterPumpState;
+	pthread_mutex_unlock(&mutexWaterPumpState);
+	//
 
 }
 
+//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
-void* taskCheckWifiDataReception(void);
-void* taskSetAirTemperature(void);
-void* taskSetAirHumidity(void);
-
-
-void* periodicTask1(void* arg){
-
-}
-
-void* task1(void* arg) {
-
-}
-
-void* task2(void* arg) {
-
-}
+void* taskCheckWifiDataReception(void) {}
+void* taskSetAirTemperature(void) {}
+void* taskSetAirHumidity(void) {}
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 int main(int count, char* args[])
@@ -283,20 +299,6 @@ int main(int count, char* args[])
 	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, VOID);
 	pthread_detach(threadCheckWifiDataReception);
 
-	//###create thread template###
-		//int arguments1 = 0;
-		//pthread_t thread1;
-		//pthread_create(&thread1, 0, task1, &arguments1);       /* start thread */
-		//pthread_detach(thread1);                    /* don't track it */
-
-	//###create periodic task template###
-		//signal(SIGALRM, periodicTask1); // set signal (alarm)
-		//struct itimerval itv1;
-		//itv1.it_interval.tv_sec = itv1.it_value.tv_sec = 5;
-		//itv1.it_interval.tv_usec = itv1.it_value.tv_usec = 0;
-		//setitimer(ITIMER_REAL, &itv1, NULL); /* send signal to process for every 5 seconds*/
-
-	//###create daemon template###
 		pid = fork();//new daemon
 		if (pid < 0) {//fail
 			syslog(LOG_ERR, "%s\n", "fork");
