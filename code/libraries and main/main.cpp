@@ -16,10 +16,12 @@
 //#include "waterSensor.h"
 //#include "lightSensor.h"
 
-//#include "heater.h"
-//#include "stepMotor.h"
-//#include "LED.h"
-//#include "waterPump.h"
+#include "heater.h"
+#include "stepmotor.h"
+#include "light.h"
+#include "waterpump.h"
+
+#include "buffer.h"
 
 #define BUFFER_SIZE 8
 
@@ -68,6 +70,12 @@ float waterPumpState;
 void panic(char* msg);
 #define panic(m)		{perror(m); abort();}
 
+/*classes*/
+WaterPump waterPump;
+StepMotor stepMotor;
+Light light;
+Heater heater;
+
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
@@ -108,12 +116,17 @@ void* taskReadSensors(void) {
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
-void* taskTakePhoto(void) {}
-void* taskProcessPhoto(void) {}
+void* taskTakePhoto(void) {
+	setPrio(1);
+}
+void* taskProcessPhoto(void) {
+	setPrio(2);
+}
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
 void* taskSendData(void) {
+	setPrio(4);
 
 	float airTemperature, airHumidity;
 
@@ -142,7 +155,7 @@ void* taskSendData(void) {
 }
 
 void* taskSendPhoto(void) {
-
+	setPrio(3);
 	//photo struct
 
 	sem_wait(&semaphoreProcessedPhotoBuffer);
@@ -155,6 +168,7 @@ void* taskSendPhoto(void) {
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
 void* taskProcessAirTemperature(void) {
+	setPrio(5);
 	
 	float airTemperature;
 	float result;
@@ -175,6 +189,7 @@ void* taskProcessAirTemperature(void) {
 }
 
 void* taskProcessAirHumidity(void) {
+	setPrio(5);
 
 	float airHumidity;
 	float result;
@@ -194,6 +209,7 @@ void* taskProcessAirHumidity(void) {
 }
 
 void* taskProcessLightLevel(void) {
+	setPrio(5);
 
 	float airTemperature;
 	float result;
@@ -216,6 +232,7 @@ void* taskProcessLightLevel(void) {
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
 void* taskActuateHeater(void) {
+	setPrio(7);
 	pthread_mutex_lock(&mutexTargetHeaterPower);
 	targetHeaterPower;
 	pthread_mutex_unlock(&mutexTargetHeaterPower);
@@ -224,6 +241,7 @@ void* taskActuateHeater(void) {
 }
 
 void* taskActuateWindow(void) {
+	setPrio(7);
 	pthread_mutex_lock(&mutexTargetMotorPosition);
 	targetMotorPosition;
 	pthread_mutex_unlock(&mutexTargetMotorPosition);
@@ -232,6 +250,7 @@ void* taskActuateWindow(void) {
 }
 
 void* taskActuateLight(void) {
+	setPrio(7);
 	pthread_mutex_lock(&mutexTargetLightPower);
 	targetLightPower;
 	pthread_mutex_unlock(&mutexTargetLightPower);
@@ -240,6 +259,7 @@ void* taskActuateLight(void) {
 }
 
 void* taskActuateWaterPump(void) {
+	setPrio(7);
 	pthread_mutex_lock(&mutexWaterPumpState);
 	waterPumpState;
 	pthread_mutex_unlock(&mutexWaterPumpState);
@@ -250,13 +270,21 @@ void* taskActuateWaterPump(void) {
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
 void* taskCheckWifiDataReception(void) {}
-void* taskSetAirTemperature(void) {}
-void* taskSetAirHumidity(void) {}
+void* taskSetAirTemperature(void) {
+	setPrio(6);
+}
+void* taskSetAirHumidity(void) {
+	setPrio(6);
+}
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 int main(int count, char* args[])
 {
 	//MAIN SETUP
+	waterPump.init();
+	stepMotor.init();
+	light.init();
+	heater.init();
 
 	//declare semaphores
 	if (sem_init(&airTemperatureBuffer, 0, 1); != 0)
