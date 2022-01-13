@@ -1,29 +1,40 @@
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <resolv.h>
-#include <pthread.h>
+#include <cmath>
+#include <fcntl.h>
 #include <netdb.h>
+#include <pthread.h>
+#include <resolv.h>
+#include <semaphore.h>
+#include <signal.h>
+#include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/syslog.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
-#include <signal.h>
-#include <semaphore.h>
+
 //#include <sys/semaphore.h>
 
 //#include "airSensor.h"
 //#include "waterSensor.h"
 //#include "lightSensor.h"
 
+#include "buffer.h"
+
 #include "heater.h"
 #include "stepmotor.h"
 #include "light.h"
 #include "waterpump.h"
 
-#include "buffer.h"
 
-#define BUFFER_SIZE 8
+
+#ifndef NULL
+#define NULL 0
+#endif
+
 
 void setPrio(unsigned int priority) {
 	struct sched_param Priority_Param; //struct to set priority
@@ -76,11 +87,23 @@ StepMotor stepMotor;
 Light light;
 Heater heater;
 
+//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+
+void signal_handler(int sig) {
+	switch(sig) {
+		case SIGHUP:
+			syslog(LOG_INFO,"Hangup signal catched");
+			break;
+		case SIGTERM:
+			syslog(LOG_INFO,"Terminate signal catched");
+			exit(0);
+			break;
+	}
+}
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
-void* taskReadSensors(void) {
-	setPrio(unsigned int priority)
+void* taskReadSensors(void*) {
 
 	float airTemperature, airHumidity;
 
@@ -111,23 +134,25 @@ void* taskReadSensors(void) {
 	sem_wait(&semaphoreLightLevel);
 		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
 	sem_post(&semaphoreLightLevel);
-
+	return NULL;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
-void* taskTakePhoto(void) {
+void* taskTakePhoto(void*) {
 	setPrio(1);
+	return NULL;
 }
-void* taskProcessPhoto(void) {
+void* taskProcessPhoto(void*) {
 	setPrio(2);
+	return NULL;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
-void* taskSendData(void) {
+void* taskSendData(void*) {
 	setPrio(4);
-
+	printf("Thread ON\n");
 	float airTemperature, airHumidity;
 
 	sem_wait(&semaphoreAirTemperature);
@@ -151,23 +176,26 @@ void* taskSendData(void) {
 	sem_post(&semaphoreLightLevel);
 
 	//insert in the database
-
+	return NULL;
 }
 
-void* taskSendPhoto(void) {
+void* taskSendPhoto(void*) {
+	printf("Thread ON\n");
 	setPrio(3);
 	//photo struct
 
 	sem_wait(&semaphoreProcessedPhotoBuffer);
-		while (!lightLevelBuffer.remove(/*//photo struct*/)) {/*buffer empty*/ }
+		//while (!lightLevelBuffer.remove(/*//photo struct*/)) {/*buffer empty*/ }
 	sem_post(&semaphoreProcessedPhotoBuffer);
 
 	//insert in the database
+	return NULL;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
-void* taskProcessAirTemperature(void) {
+void* taskProcessAirTemperature(void*) {
+	printf("Thread ON\n");
 	setPrio(5);
 	
 	float airTemperature;
@@ -185,10 +213,11 @@ void* taskProcessAirTemperature(void) {
 	pthread_mutex_lock(&mutexTargetHeaterPower);
 		targetHeaterPower = result;
 	pthread_mutex_unlock(&mutexTargetHeaterPower);
-
+	return NULL;
 }
 
-void* taskProcessAirHumidity(void) {
+void* taskProcessAirHumidity(void*) {
+	printf("Thread ON\n");
 	setPrio(5);
 
 	float airHumidity;
@@ -205,13 +234,14 @@ void* taskProcessAirHumidity(void) {
 	pthread_mutex_lock(&mutexTargetMotorPosition);
 		targetMotorPosition = result;
 	pthread_mutex_unlock(&mutexTargetMotorPosition);
-
+	return NULL;
 }
 
-void* taskProcessLightLevel(void) {
+void* taskProcessLightLevel(void*) {
+	printf("Thread ON\n");
 	setPrio(5);
 
-	float airTemperature;
+	float lightLevel;
 	float result;
 
 	sem_wait(&semaphoreLightLevel);
@@ -226,136 +256,164 @@ void* taskProcessLightLevel(void) {
 	pthread_mutex_lock(&mutexTargetLightPower);
 		targetLightPower = result;
 	pthread_mutex_unlock(&mutexTargetLightPower);
-
+	return NULL;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
-void* taskActuateHeater(void) {
+void* taskActuateHeater(void*) {
+	printf("Thread ON\n");
 	setPrio(7);
 	pthread_mutex_lock(&mutexTargetHeaterPower);
 	targetHeaterPower;
 	pthread_mutex_unlock(&mutexTargetHeaterPower);
 	//
-
+	return NULL;
 }
 
-void* taskActuateWindow(void) {
+void* taskActuateWindow(void*) {
+	printf("Thread ON\n");
 	setPrio(7);
 	pthread_mutex_lock(&mutexTargetMotorPosition);
 	targetMotorPosition;
 	pthread_mutex_unlock(&mutexTargetMotorPosition);
 	//
-
+	return NULL;
 }
 
-void* taskActuateLight(void) {
+void* taskActuateLight(void*) {
+	printf("Thread ON\n");
 	setPrio(7);
 	pthread_mutex_lock(&mutexTargetLightPower);
 	targetLightPower;
 	pthread_mutex_unlock(&mutexTargetLightPower);
 	//
-
+	return NULL;
 }
 
-void* taskActuateWaterPump(void) {
+void* taskActuateWaterPump(void*) {
+	printf("Thread ON\n");
 	setPrio(7);
 	pthread_mutex_lock(&mutexWaterPumpState);
 	waterPumpState;
 	pthread_mutex_unlock(&mutexWaterPumpState);
 	//
-
+	return NULL;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
-void* taskCheckWifiDataReception(void) {}
+void* taskCheckWifiDataReception(void*) {return NULL;}
 void* taskSetAirTemperature(void) {
+	printf("Thread ON\n");
 	setPrio(6);
+	return NULL;
 }
 void* taskSetAirHumidity(void) {
+	printf("Thread ON\n");
 	setPrio(6);
+	return NULL;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 int main(int count, char* args[])
 {
 	//MAIN SETUP
-	waterPump.init();
-	stepMotor.init();
-	light.init();
-	heater.init();
+	waterPump.init(12);
+	stepMotor.init(6, 13, 19, 26, 0, 10000, 0);
+	light.init(5);
+	heater.init(25);
 
 	//declare semaphores
-	if (sem_init(&airTemperatureBuffer, 0, 1); != 0)
+	if (sem_init(&semaphoreAirTemperature, 0, 1) != 0)
+	{
+		// Error: initialization failed
+	}
+	if (sem_init(&semaphoreAirHumidity, 0, 1) != 0)
+	{
+		// Error: initialization failed
+	}
+	if (sem_init(&semaphoreWaterTemperature, 0, 1) != 0)
+	{
+		// Error: initialization failed
+	}
+	if (sem_init(&semaphoreLightLevel, 0, 1) != 0)
+	{
+		// Error: initialization failed
+	}
+	if (sem_init(&semaphorePhotoBuffer, 0, 1) != 0)
+	{
+		// Error: initialization failed
+	}
+	if (sem_init(&semaphoreProcessedPhotoBuffer, 0, 1) != 0)
 	{
 		// Error: initialization failed
 	}
 	
 
 	pthread_t threadTakePhoto, threadProcessPhoto;
-	pthread_create(&threadTakePhoto, 0, taskTakePhoto, VOID);
-	pthread_create(&threadProcessPhoto, 0, taskProcessPhoto, VOID);
+	pthread_create(&threadTakePhoto, 0, taskTakePhoto, NULL);
+	pthread_create(&threadProcessPhoto, 0, taskProcessPhoto, NULL);
 	pthread_detach(threadTakePhoto);
 	pthread_detach(threadProcessPhoto);
 
 	pthread_t threadSendData, threadSendPhoto;
-	pthread_create(&threadSendData, 0, taskSendData, VOID);
-	pthread_create(&threadSendPhoto, 0, taskSendPhoto, VOID);
+	pthread_create(&threadSendData, 0, taskSendData, NULL);
+	pthread_create(&threadSendPhoto, 0, taskSendPhoto, NULL);
 	pthread_detach(threadSendData);
 	pthread_detach(threadSendPhoto);
 
 	pthread_t threadProcessAirTemperature, threadProcessAirHumidity, threadProcessLightLevel;
-	pthread_create(&threadProcessAirTemperature, 0, taskProcessAirTemperature, VOID);
-	pthread_create(&threadProcessAirHumidity, 0, taskProcessAirHumidity, VOID);
-	pthread_create(&threadProcessLightLevel, 0, taskProcessLightLevel, VOID);
+	pthread_create(&threadProcessAirTemperature, 0, taskProcessAirTemperature, NULL);
+	pthread_create(&threadProcessAirHumidity, 0, taskProcessAirHumidity, NULL);
+	pthread_create(&threadProcessLightLevel, 0, taskProcessLightLevel, NULL);
 	pthread_detach(threadProcessAirTemperature);
 	pthread_detach(threadProcessAirHumidity);
 	pthread_detach(threadProcessLightLevel);
 
 	pthread_t threadActuateHeater, threadActuateWindow, threadActuateLight, threadActuateWaterPump;
-	pthread_create(&threadActuateHeater, 0, taskActuateHeater, VOID);
-	pthread_create(&threadActuateWindow, 0, taskActuateWindow, VOID);
-	pthread_create(&threadActuateLight, 0, taskActuateLight, VOID);
-	pthread_create(&threadActuateWaterPump, 0, taskActuateWaterPump, VOID);
+	pthread_create(&threadActuateHeater, 0, taskActuateHeater, NULL);
+	pthread_create(&threadActuateWindow, 0, taskActuateWindow, NULL);
+	pthread_create(&threadActuateLight, 0, taskActuateLight, NULL);
+	pthread_create(&threadActuateWaterPump, 0, taskActuateWaterPump, NULL);
 	pthread_detach(threadActuateHeater);
 	pthread_detach(threadActuateWindow);
 	pthread_detach(threadActuateLight);
 	pthread_detach(threadActuateWaterPump);
 
 	pthread_t threadCheckWifiDataReception;
-	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, VOID);
+	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, NULL);
 	pthread_detach(threadCheckWifiDataReception);
 
-		pid = fork();//new daemon
-		if (pid < 0) {//fail
-			syslog(LOG_ERR, "%s\n", "fork");
-			exit(EXIT_FAILURE);
-		}
-		if (pid > 0) {//success
-			printf("Deamon PID: %d\n", pid);
-			exit(EXIT_SUCCESS);
-		}
-		sid = setsid();//new session
-		if (sid < 0) {//fail
-			syslog(LOG_ERR, "%s\n", "setsid");
-			exit(EXIT_FAILURE);
-		}
-		//change dir to root
-		if (chdir("/") < 0) {//fail
-			syslog(LOG_ERR, "%s\n", "chdir");
-			exit(EXIT_FAILURE);
-		}
-		umask(0);//mask
-		close(STDIN_FILENO);  // close standard input file descriptor
-		close(STDOUT_FILENO); // close standard output file descriptor
-		close(STDERR_FILENO); // close standard error file descriptor
-		signal(SIGHUP, signal_handler); /* catch hangup signal */
-		signal(SIGTERM, signal_handler); /* catch kill signal */
+	int pid = fork();//new daemon
+	if (pid < 0) {//fail
+		syslog(LOG_ERR, "%s\n", "fork");
+		exit(EXIT_FAILURE);
+	}
+	if (pid > 0) {//success
+		printf("Deamon PID: %d\n", pid);
+		exit(EXIT_SUCCESS);
+	}
+	int sid = setsid();//new session
+	if (sid < 0) {//fail
+		syslog(LOG_ERR, "%s\n", "setsid");
+		exit(EXIT_FAILURE);
+	}
+	//change dir to root
+	if (chdir("/") < 0) {//fail
+		syslog(LOG_ERR, "%s\n", "chdir");
+		exit(EXIT_FAILURE);
+	}
+	umask(0);//mask
+	close(STDIN_FILENO);  // close standard input file descriptor
+	close(STDOUT_FILENO); // close standard output file descriptor
+	close(STDERR_FILENO); // close standard error file descriptor
+	signal(SIGHUP, signal_handler); /* catch hangup signal */
+	signal(SIGTERM, signal_handler); /* catch kill signal */
 
 	//MAIN LOOP
-		while (1)
-		{
-			taskReadSensors();
-		}
+	while (1)
+	{
+		taskReadSensors(NULL);
+	}
 }
