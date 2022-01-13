@@ -1,5 +1,5 @@
 obj-m := stepmotor.o
-waterpump-objs:=stepmotormodule.o utils.o
+stepmotor-objs:=stepmotormodule.o utils.o
 KDIR := /home/bruno/buildroot/buildroot-cam2/output/build/linux-custom
 ARCH ?= arm
 CROSS_COMPILE ?= ~/buildroot/buildroot-cam2/output/host/bin/arm-buildroot-linux-uclibcgnueabihf-

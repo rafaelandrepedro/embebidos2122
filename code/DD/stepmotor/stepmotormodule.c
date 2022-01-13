@@ -213,8 +213,8 @@ static int __init stepmotorModule_init(void) {
 	}
 
 
-	//s_pGpioRegisters = (struct GpioRegisters *)ioremap(GPIO_BASE, sizeof(struct GpioRegisters));
-	s_pGpioRegisters = (struct GpioRegisters *)ioremap_nocache(GPIO_BASE, sizeof(struct GpioRegisters));
+	s_pGpioRegisters = (struct GpioRegisters *)ioremap(GPIO_BASE, sizeof(struct GpioRegisters));
+	//s_pGpioRegisters = (struct GpioRegisters *)ioremap_nocache(GPIO_BASE, sizeof(struct GpioRegisters));
 	
 	pr_alert("map to virtual adresse: 0x%x\n", (unsigned)s_pGpioRegisters);
 	
@@ -229,8 +229,14 @@ static int __init stepmotorModule_init(void) {
 static void __exit stepmotorModule_exit(void) {
 	
 	pr_alert("%s: called\n",__FUNCTION__);
+	 
+	//Configure the pins as input
 	
-	SetGPIOFunction(s_pGpioRegisters, StepmotorGpioPin, 0); //Configure the pin as input
+	SetGPIOFunction(s_pGpioRegisters, StepmotorGpioPinA1, 0);
+	SetGPIOFunction(s_pGpioRegisters, StepmotorGpioPinA2, 0);
+	SetGPIOFunction(s_pGpioRegisters, StepmotorGpioPinB1, 0);
+	SetGPIOFunction(s_pGpioRegisters, StepmotorGpioPinB2, 0);
+	
 	iounmap(s_pGpioRegisters);
 	cdev_del(&c_dev);
 	device_destroy(stepmotorDevice_class, stepmotorDevice_majorminor);
