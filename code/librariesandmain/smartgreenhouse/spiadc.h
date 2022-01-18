@@ -20,7 +20,7 @@ public:
     ADCmcp3008(std::string devspi, unsigned char spiMode, unsigned int spiSpeed, unsigned char spibitsPerWord);
     ~ADCmcp3008();
     int spiWriteRead(unsigned char *data, int length);
-    int adcGetValue(int channeladc);
+    virtual int adcGetValue(int channeladc);
      
 private:
     unsigned char mode;

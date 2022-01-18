@@ -9,6 +9,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 
 SOURCES += \
+        LDRsensor.cpp \
+        WaterTempsensor.cpp \
         airsensor.cpp \
         buffer.cpp \
         heater.cpp \
@@ -20,6 +22,8 @@ SOURCES += \
         waterpump.cpp
 
 HEADERS += \
+    LDRsensor.h \
+    WaterTempsensor.h \
     airsensor.h \
     buffer.h \
     heater.h \
