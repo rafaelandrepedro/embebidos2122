@@ -17,6 +17,8 @@ Airsensor::Airsensor(int adapter_nr, int addr){
 Airsensor::~Airsensor(){}
    
 bool Airsensor::init(int adapter_nr=1, int addr=0x40){
+  if (airsensorState==1)
+        return 0;
   char filename[20];
   
   airsensorState=0;

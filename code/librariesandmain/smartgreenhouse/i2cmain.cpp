@@ -1,4 +1,4 @@
-#include "sqlite3.h"
+
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
@@ -9,7 +9,6 @@
 
 #include <unistd.h>
 
-#include "database.h"
 using namespace std;
 
 int main(int argc, char* argv[]) {
