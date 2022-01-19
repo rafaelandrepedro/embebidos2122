@@ -1,0 +1,1 @@
+cmd_/home/bruno/embebidos2122/code/DD/stepmotor/stepmotor.ko := ~/buildroot/buildroot-cam2/output/host/bin/arm-buildroot-linux-uclibcgnueabihf-ld -r  -EL  --build-id=sha1  -T scripts/module.lds -o /home/bruno/embebidos2122/code/DD/stepmotor/stepmotor.ko /home/bruno/embebidos2122/code/DD/stepmotor/stepmotor.o /home/bruno/embebidos2122/code/DD/stepmotor/stepmotor.mod.o;  true
