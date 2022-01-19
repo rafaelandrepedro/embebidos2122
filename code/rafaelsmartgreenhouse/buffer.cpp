@@ -33,7 +33,10 @@ bool Buffer<BufferType>::remove(BufferType* value) {
 
 template <typename BufferType>
 bool Buffer<BufferType>::check(BufferType* value) {
-	if (addPtr == removePtr)
-		return 0;
-	*value = values[removePtr];
+	int checkPtr=addPtr;
+	checkPtr--;
+	if(checkPtr==-1)
+		checkPtr=BUFFER_SIZE-1;
+	*value = values[checkPtr];
+	return 1;
 }

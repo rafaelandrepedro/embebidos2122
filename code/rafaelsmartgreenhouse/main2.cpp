@@ -207,86 +207,92 @@ void* taskSendPhoto(void*) {
 
 void* taskProcessAirTemperature(void*) {
 	setPrio(5);
+	while(1){
+		int airTemperature, tHeaterPower;
+		float result;
+
+		sem_wait(&semaphoreAirTemperature);
+			while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
+		sem_post(&semaphoreAirTemperature);
 	
-	int airTemperature, tHeaterPower;
-	float result;
-
-	sem_wait(&semaphoreAirTemperature);
-		while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
-	sem_post(&semaphoreAirTemperature);
-
-	//convert
-	float Temp_Code = airTemperature;
-	result = (175.72 * Temp_Code / 65536) + 46.85;
-
-	if(result<20)
-		tHeaterPower=100;
-	else if(result>20 && result<30)
-		tHeaterPower=(30-result)*10;
-	else
-		tHeaterPower=0;
-
-
-	pthread_mutex_lock(&mutexTargetHeaterPower);
-		targetHeaterPower = tHeaterPower;
-	pthread_mutex_unlock(&mutexTargetHeaterPower);
+		//convert
+		float Temp_Code = airTemperature;
+		result = (175.72 * Temp_Code / 65536) + 46.85;
+	
+		if(result<20)
+			tHeaterPower=100;
+		else if(result>20 && result<30)
+			tHeaterPower=(30-result)*10;
+		else
+			tHeaterPower=0;
+	
+	
+		pthread_mutex_lock(&mutexTargetHeaterPower);
+			targetHeaterPower = tHeaterPower;
+		pthread_mutex_unlock(&mutexTargetHeaterPower);
+		sleep(4);
+	}
 	return NULL;
 }
 
 void* taskProcessAirHumidity(void*) {
 	setPrio(5);
-
-	int airHumidity, tMotorPosition;
-	float result;
-
-	sem_wait(&semaphoreAirHumidity);
-		while (!airTemperatureBuffer.remove(&airHumidity)) {/*buffer empty*/ }
-	sem_post(&semaphoreAirHumidity);
-
-	//convert
-	float RH_Code = airHumidity;
-	result = (125 * RH_Code / 65536) + 6;
-
-	if(result<40)
-		tMotorPosition=0;
-	else
-		tMotorPosition=90;
-
-	pthread_mutex_lock(&mutexTargetMotorPosition);
-		targetMotorPosition = tMotorPosition;
-	pthread_mutex_unlock(&mutexTargetMotorPosition);
+	while(1){
+		int airHumidity, tMotorPosition;
+		float result;
+	
+		sem_wait(&semaphoreAirHumidity);
+			while (!airTemperatureBuffer.remove(&airHumidity)) {/*buffer empty*/ }
+		sem_post(&semaphoreAirHumidity);
+	
+		//convert
+		float RH_Code = airHumidity;
+		result = (125 * RH_Code / 65536) + 6;
+	
+		if(result<40)
+			tMotorPosition=0;
+		else
+			tMotorPosition=90;
+	
+		pthread_mutex_lock(&mutexTargetMotorPosition);
+			targetMotorPosition = tMotorPosition;
+		pthread_mutex_unlock(&mutexTargetMotorPosition);
+		sleep(4);
+	}
 	return NULL;
 }
 
 void* taskProcessLightLevel(void*) {
 	setPrio(5);
+	while(1){
+		int lightLevel, tLightPower, wPumpState;
+		float result;
+	
+		sem_wait(&semaphoreLightLevel);
+			while (!airTemperatureBuffer.remove(&lightLevel)) {/*buffer empty*/ }
+		sem_post(&semaphoreLightLevel);
+	
+		//convert
 
-	int lightLevel, tLightPower, wPumpState;
-	float result;
 
-	sem_wait(&semaphoreLightLevel);
-		while (!airTemperatureBuffer.remove(&lightLevel)) {/*buffer empty*/ }
-	sem_post(&semaphoreLightLevel);
-
-	//convert
-
-
-	if(result<40){
-		wPumpState=100;
-		tLightPower=100
+		if(result<40){
+			wPumpState=100;
+			tLightPower=100
+		}
+		else{
+			wPumpState=100; //rever sleep time
+			tLightPower=0;
+		}
+	
+		pthread_mutex_lock(&mutexTargetLightPower);
+			targetLightPower = tLightPower;
+		pthread_mutex_unlock(&mutexTargetLightPower);
+	
+		pthread_mutex_lock(&mutexTargetLightPower);
+			waterPumpState = wPumpState;
+		pthread_mutex_unlock(&mutexTargetLightPower);
+		sleep(4);
 	}
-	else{
-		wPumpState=100; //rever sleep time
-		tLightPower=0;
-	}
-
-	pthread_mutex_lock(&mutexTargetLightPower);
-		targetLightPower = tLightPower;
-	pthread_mutex_unlock(&mutexTargetLightPower);
-
-	pthread_mutex_lock(&mutexTargetLightPower);
-		waterPumpState = wPumpState;
-	pthread_mutex_unlock(&mutexTargetLightPower);
 	return NULL;
 }
 
@@ -294,40 +300,62 @@ void* taskProcessLightLevel(void*) {
 
 void* taskActuateHeater(void*) {
 	setPrio(7);
-	pthread_mutex_lock(&mutexTargetHeaterPower);
-	targetHeaterPower;
-	pthread_mutex_unlock(&mutexTargetHeaterPower);
-	//
+	while(1){
+		pthread_mutex_lock(&mutexTargetHeaterPower);
+		int tHeaterPower=targetHeaterPower;
+		pthread_mutex_unlock(&mutexTargetHeaterPower);
+		//
+		if(tHeaterPower)
+			heater.turnOn();
+		else
+			heater.turnOff();
+		sleep(4);
+	}
 	return NULL;
 }
 
 void* taskActuateWindow(void*) {
-	printf("Thread ON\n");
 	setPrio(7);
-	pthread_mutex_lock(&mutexTargetMotorPosition);
-	targetMotorPosition;
-	pthread_mutex_unlock(&mutexTargetMotorPosition);
-	//
+	while(1){
+		pthread_mutex_lock(&mutexTargetMotorPosition);
+		int tMotorPosition=targetMotorPosition;
+		pthread_mutex_unlock(&mutexTargetMotorPosition);
+		//
+		stepMotor.rotateTo(tMotorPosition);
+		sleep(4);
+	}
 	return NULL;
 }
 
 void* taskActuateLight(void*) {
-	printf("Thread ON\n");
 	setPrio(7);
-	pthread_mutex_lock(&mutexTargetLightPower);
-	targetLightPower;
-	pthread_mutex_unlock(&mutexTargetLightPower);
-	//
+	while(1){
+		pthread_mutex_lock(&mutexTargetLightPower);
+		int tLightPower=targetLightPower;
+		pthread_mutex_unlock(&mutexTargetLightPower);
+		//
+		if(tLightPower)
+			light.turnOn();
+		else
+			light.turnOff();
+		sleep(4);
+	}
 	return NULL;
 }
 
 void* taskActuateWaterPump(void*) {
-	printf("Thread ON\n");
 	setPrio(7);
-	pthread_mutex_lock(&mutexWaterPumpState);
-	waterPumpState;
-	pthread_mutex_unlock(&mutexWaterPumpState);
-	//
+	while(1){
+		pthread_mutex_lock(&mutexWaterPumpState);
+		int wPumpState=waterPumpState;
+		pthread_mutex_unlock(&mutexWaterPumpState);
+		//
+		if(wPumpState)
+			waterPump.turnOn();
+		else
+			waterPump.turnOff();
+		sleep(4);
+	}
 	return NULL;
 }
 
@@ -335,12 +363,10 @@ void* taskActuateWaterPump(void*) {
 
 void* taskCheckWifiDataReception(void*) {return NULL;}
 void* taskSetAirTemperature(void) {
-	printf("Thread ON\n");
 	setPrio(6);
 	return NULL;
 }
 void* taskSetAirHumidity(void) {
-	printf("Thread ON\n");
 	setPrio(6);
 	return NULL;
 }
@@ -414,6 +440,11 @@ int main(int count, char* args[])
 	pthread_t threadCheckWifiDataReception;
 	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, NULL);
 	pthread_detach(threadCheckWifiDataReception);
+
+	while (1)
+	{
+		taskReadSensors(NULL);
+	}
 
 	int pid = fork();//new daemon
 	if (pid < 0) {//fail
