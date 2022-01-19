@@ -18,9 +18,9 @@
 
 //#include <sys/semaphore.h>
 
-//#include "airSensor.h"
-//#include "waterSensor.h"
-//#include "lightSensor.h"
+#include "airSensor.h"
+#include "WaterTempsensor.h"
+#include "LDRsensor.h"
 
 #include "buffer.h"
 
@@ -82,6 +82,10 @@ void panic(char* msg);
 #define panic(m)		{perror(m); abort();}
 
 /*classes*/
+Airsensor airsensor;
+WaterTempsensor watertempsensor;
+LDRsensor ldrsensor;
+
 WaterPump waterPump;
 StepMotor stepMotor;
 Light light;
@@ -105,11 +109,20 @@ void signal_handler(int sig) {
 
 void* taskReadSensors(void*) {
 
-	float airTemperature, airHumidity;
+	int airTemperature, airHumidity;
 
+	char buf[10];
+	
 	//read air temperature
-
+	buf[0]=0xE3;
+	airsensor.cwrite(buf);
+	airsensor.cread(buf);
+	airTemperature=buf[0];
 	//read air humidty
+	buf[0]=0xE3;
+	airsensor.cwrite(buf);
+	airsensor.cread(buf);
+	airHumidity=buf[0];
 
 	sem_wait(&semaphoreAirTemperature);
 		if (!airTemperatureBuffer.add(airTemperature)) {/*buffer full*/ }
@@ -323,6 +336,10 @@ int main(int count, char* args[])
 	stepMotor.init(6, 13, 19, 26, 0, 10000, 0);
 	light.init(5);
 	heater.init(25);
+	
+	airsensor.init(1, 0x40);
+	watertempsensor.init();
+	ldrsensor.init();
 
 	//declare semaphores
 	if (sem_init(&semaphoreAirTemperature, 0, 1) != 0)
