@@ -30,3 +30,10 @@ bool Buffer<BufferType>::remove(BufferType* value) {
 		removePtr = 0;
 	return 1;
 }
+
+template <typename BufferType>
+bool Buffer<BufferType>::check(BufferType* value) {
+	if (addPtr == removePtr)
+		return 0;
+	*value = values[removePtr];
+}
