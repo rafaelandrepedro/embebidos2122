@@ -236,6 +236,7 @@ void* taskProcessAirTemperature(void*) {
 		pthread_mutex_lock(&mutexTargetHeaterPower);
 			targetHeaterPower = tHeaterPower;
 		pthread_mutex_unlock(&mutexTargetHeaterPower);
+		
 		sleep(4);
 	}
 	return NULL;
@@ -259,10 +260,11 @@ void* taskProcessAirHumidity(void*) {
 			tMotorPosition=0;
 		else
 			tMotorPosition=256;
-	
+		/*
 		pthread_mutex_lock(&mutexTargetMotorPosition);
 			targetMotorPosition = tMotorPosition;
 		pthread_mutex_unlock(&mutexTargetMotorPosition);
+		*/
 		sleep(4);
 	}
 	return NULL;
@@ -381,7 +383,7 @@ int main(int count, char* args[])
 {
 	//MAIN SETUP
 	//waterPump.init(12);
-	stepMotor.init(19, 6, 13, 26, 0, 10000, 0);
+	stepMotor.init(19, 13, 6, 26, 0, 10000, 0);
 	//light.init(5);
 	//heater.init(25);
 
