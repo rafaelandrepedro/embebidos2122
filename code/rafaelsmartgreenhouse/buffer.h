@@ -7,13 +7,14 @@
 template <typename BufferType>
 class Buffer {
 private:
-    BufferType values[BUFFER_SIZE];
+	BufferType values[BUFFER_SIZE];
 	int addPtr, removePtr;
 public:
-    Buffer();
-    ~Buffer();
+	Buffer();
+	~Buffer();
 	bool add(BufferType value);
 	bool remove(BufferType* value);
+	bool check(BufferType* value);
 };
 
 #endif
