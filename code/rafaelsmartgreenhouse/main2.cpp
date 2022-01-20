@@ -18,7 +18,7 @@
 
 //#include <sys/semaphore.h>
 
-#include "airSensor.h"
+#include "airsensor.h"
 #include "WaterTempsensor.h"
 #include "LDRsensor.h"
 
@@ -58,10 +58,10 @@ sem_t semaphorePhotoBuffer;
 sem_t semaphoreProcessedPhotoBuffer;
 
 /*buffers*/
-Buffer<float> airTemperatureBuffer;
-Buffer<float> airHumidityBuffer;
-Buffer<float> waterTemperatureBuffer;
-Buffer<float> lightLevelBuffer;
+Buffer<int> airTemperatureBuffer;
+Buffer<int> airHumidityBuffer;
+Buffer<int> waterTemperatureBuffer;
+Buffer<int> lightLevelBuffer;
 //photoBuffer
 //processedPhotoBuffer
 
@@ -84,7 +84,7 @@ void panic(char* msg);
 /*classes*/
 LDRsensor ldrsensor;
 WaterTempsensor watertempsensor;
-AirSensor airsensor;
+Airsensor airsensor;
 
 WaterPump waterPump;
 StepMotor stepMotor;
@@ -110,16 +110,14 @@ void signal_handler(int sig) {
 void* taskReadSensors(void*) {
 
 	int airTemperature, airHumidity;
-
-	//read air temperature
 	char buf[10];
+	//read air temperature
 	buf[0]=0xE3;
 	airsensor.cwrite(buf);
 	airsensor.cread(buf);
 	airTemperature=buf[0];
 
 	//read air humidty
-	char buf[10];
 	buf[0]=0xE5;
 	airsensor.cwrite(buf);
 	airsensor.cread(buf);
@@ -281,7 +279,7 @@ void* taskProcessLightLevel(void*) {
 
 		if(result<40){
 			wPumpState=100;
-			tLightPower=100
+			tLightPower=100;
 		}
 		else{
 			wPumpState=100; //rever sleep time

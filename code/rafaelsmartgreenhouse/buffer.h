@@ -4,7 +4,7 @@
 
 #define BUFFER_SIZE 8
 
-template <typename BufferType>
+template <class BufferType>
 class Buffer {
 private:
 	BufferType values[BUFFER_SIZE];
@@ -16,5 +16,7 @@ public:
 	bool remove(BufferType* value);
 	bool check(BufferType* value);
 };
+
+
 
 #endif

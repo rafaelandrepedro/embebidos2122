@@ -39,6 +39,7 @@ bool Airsensor::init(int adapter_nr=1, int addr=0x40){
   __u8 reg = 0x10; /* Device register to access */
   __s32 res;
   airsensorState=1;
+  return 1;
 }
 
 bool Airsensor::cwrite(char buf[10]){

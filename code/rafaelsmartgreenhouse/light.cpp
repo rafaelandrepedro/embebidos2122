@@ -35,4 +35,3 @@ bool Light::state(){
 	return lightState;
 }
 
-#endif
