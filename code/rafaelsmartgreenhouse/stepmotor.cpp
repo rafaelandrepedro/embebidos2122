@@ -54,7 +54,8 @@ bool StepMotor::state(){
 
 void StepMotor::step(bool direction){
 	usleep(stepDelay);
-	if(direction)
+	std::cout << motorStep << std::endl;
+	if(direction){
 		switch(motorState){
 		case 0b0011:
 			motorState=0b0110;
@@ -69,7 +70,8 @@ void StepMotor::step(bool direction){
 			motorState=0b0011;
 			break;
 		}
-	else
+	}
+	else{
 		switch(motorState){
 		case 0b1100:
 			motorState=0b0110;
@@ -84,6 +86,7 @@ void StepMotor::step(bool direction){
 			motorState=0b0011;
 			break;
 		}
+	}
 		
 	std::string command;
 	
@@ -94,8 +97,6 @@ void StepMotor::step(bool direction){
 	command = "echo " + std::to_string((bool)(motorState&(1<<2))) + " > /sys/class/gpio/gpio" + std::to_string(B1) + "/value";
 	system(command.c_str());	
 	command = "echo " + std::to_string((bool)(motorState&(1<<3))) + " > /sys/class/gpio/gpio" + std::to_string(B2) + "/value";
-	system(command.c_str());
-	command = "echo " + std::to_string((bool)(motorState&(1<<3))) + " " + std::to_string(B2) + " " + std::to_string(motorState);
 	system(command.c_str());
 }
 
