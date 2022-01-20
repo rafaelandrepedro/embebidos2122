@@ -101,11 +101,15 @@ void StepMotor::step(bool direction){
 
 void StepMotor::rotate(int steps){
 	if(steps>0)
-		for(int i=0;i<steps;i++)
+		for(int i=0;i<steps;i++){
 			step(1);
+			motorStep++;
+		}
 	else
-		for(int i=0;i<-steps;i++)
+		for(int i=0;i<-steps;i++){
 			step(0);
+			motorStep--;
+		}
 }
 
 void StepMotor::rotateTo(int absoluteStep){

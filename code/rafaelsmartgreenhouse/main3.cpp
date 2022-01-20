@@ -1,20 +1,15 @@
 #include <iostream>
-#include "buffer.h"
+#include "stepmotor.h"
 #include <unistd.h>
 
 int main()
 {
-	Buffer<int> buf;
-	int a=1;
-	int b=2;
+	StepMotor stepmotor;
+	stepmotor.init(19, 6, 13, 26, 0, 10000, 0);
     std::cout << "Hello World!" << std::endl;
     while(1){
-	buf.add(a);
-	buf.add(b);
-	buf.remove(&b);
-	buf.remove(&a);
-        std::cout << a << b << std::endl;
-        sleep(1);
+	stepmotor.rotate(64);
+	stepmotor.rotate(-64);
     }
     return 0;
 }
