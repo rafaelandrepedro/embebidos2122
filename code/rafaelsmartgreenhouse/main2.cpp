@@ -108,6 +108,7 @@ void signal_handler(int sig) {
 //슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬�
 
 void* taskReadSensors(void*) {
+	while (1){
 
 	int airTemperature, airHumidity;
 	char buf[10];
@@ -116,12 +117,14 @@ void* taskReadSensors(void*) {
 	airsensor.cwrite(buf);
 	airsensor.cread(buf);
 	airTemperature=buf[0];
+	printf("Temp: %d\n", buf[0]);
 
 	//read air humidty
 	buf[0]=0xE5;
 	airsensor.cwrite(buf);
 	airsensor.cread(buf);
 	airHumidity=buf[0];
+	printf("Humidity: %d\n", buf[0]);
 
 	sem_wait(&semaphoreAirTemperature);
 		if (!airTemperatureBuffer.add(airTemperature)) {/*buffer full*/ }
@@ -134,7 +137,7 @@ void* taskReadSensors(void*) {
 	int waterTemperature;
 
 	//read water temperature
-	waterTemperature=watertempsensor.adcGetValue(1);
+	//waterTemperature=watertempsensor.adcGetValue(1);
 
 	sem_wait(&semaphoreWaterTemperature);
 		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
@@ -143,11 +146,13 @@ void* taskReadSensors(void*) {
 	int lightLevel;
 
 	//read light level
-	lightLevel=ldrsensor.adcGetValue(0);
+	//lightLevel=ldrsensor.adcGetValue(0);
 
 	sem_wait(&semaphoreLightLevel);
 		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
 	sem_post(&semaphoreLightLevel);
+	sleep(5);
+	}
 	return NULL;
 }
 
@@ -169,23 +174,23 @@ void* taskSendData(void*) {
 	int airTemperature, airHumidity;
 
 	sem_wait(&semaphoreAirTemperature);
-		while (!airTemperatureBuffer.check(&airTemperature)) {/*buffer empty*/ }
+		if (!airTemperatureBuffer.check(&airTemperature)) {/*buffer empty*/ }
 	sem_post(&semaphoreAirTemperature);
 
 	sem_wait(&semaphoreAirHumidity);
-		while (!airHumidityBuffer.check(&airHumidity)) {/*buffer empty*/ }
+		if (!airHumidityBuffer.check(&airHumidity)) {/*buffer empty*/ }
 	sem_post(&semaphoreAirHumidity);
 
 	int waterTemperature;
 
 	sem_wait(&semaphoreWaterTemperature);
-		while (!waterTemperatureBuffer.check(&waterTemperature)) {/*buffer empty*/ }
+		if (!waterTemperatureBuffer.check(&waterTemperature)) {/*buffer empty*/ }
 	sem_post(&semaphoreWaterTemperature);
 
 	int lightLevel;
 
 	sem_wait(&semaphoreLightLevel);
-		while (!lightLevelBuffer.check(&lightLevel)) {/*buffer empty*/ }
+		if (!lightLevelBuffer.check(&lightLevel)) {/*buffer empty*/ }
 	sem_post(&semaphoreLightLevel);
 
 	//insert in the database
@@ -193,7 +198,6 @@ void* taskSendData(void*) {
 }
 
 void* taskSendPhoto(void*) {
-	printf("Thread ON\n");
 	setPrio(3);
 	//photo struct
 
@@ -214,12 +218,12 @@ void* taskProcessAirTemperature(void*) {
 		float result;
 
 		sem_wait(&semaphoreAirTemperature);
-			while (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
+			if (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
 		sem_post(&semaphoreAirTemperature);
 	
 		//convert
 		float Temp_Code = airTemperature;
-		result = (175.72 * Temp_Code / 65536) + 46.85;
+		result = (175.72 * Temp_Code / 256) - 46.85;
 	
 		if(result<20)
 			tHeaterPower=100;
@@ -244,17 +248,17 @@ void* taskProcessAirHumidity(void*) {
 		float result;
 	
 		sem_wait(&semaphoreAirHumidity);
-			while (!airTemperatureBuffer.remove(&airHumidity)) {/*buffer empty*/ }
+			if (!airTemperatureBuffer.remove(&airHumidity)) {/*buffer empty*/ }
 		sem_post(&semaphoreAirHumidity);
 	
 		//convert
 		float RH_Code = airHumidity;
-		result = (125 * RH_Code / 65536) + 6;
+		result = (125 * RH_Code / 256) + 6;
 	
-		if(result<40)
+		if(result<70)
 			tMotorPosition=0;
 		else
-			tMotorPosition=90;
+			tMotorPosition=256;
 	
 		pthread_mutex_lock(&mutexTargetMotorPosition);
 			targetMotorPosition = tMotorPosition;
@@ -271,7 +275,7 @@ void* taskProcessLightLevel(void*) {
 		float result;
 	
 		sem_wait(&semaphoreLightLevel);
-			while (!airTemperatureBuffer.remove(&lightLevel)) {/*buffer empty*/ }
+			if (!airTemperatureBuffer.remove(&lightLevel)) {/*buffer empty*/ }
 		sem_post(&semaphoreLightLevel);
 	
 		//convert
@@ -307,10 +311,8 @@ void* taskActuateHeater(void*) {
 		int tHeaterPower=targetHeaterPower;
 		pthread_mutex_unlock(&mutexTargetHeaterPower);
 		//
-		if(tHeaterPower)
-			heater.turnOn();
-		else
-			heater.turnOff();
+		printf("Actuate heater at %d%\n", tHeaterPower);
+		heater.set(tHeaterPower);
 		sleep(4);
 	}
 	return NULL;
@@ -323,6 +325,7 @@ void* taskActuateWindow(void*) {
 		int tMotorPosition=targetMotorPosition;
 		pthread_mutex_unlock(&mutexTargetMotorPosition);
 		//
+		printf("Actuate motor at %d%\n", tMotorPosition);
 		stepMotor.rotateTo(tMotorPosition);
 		sleep(4);
 	}
@@ -377,10 +380,10 @@ void* taskSetAirHumidity(void) {
 int main(int count, char* args[])
 {
 	//MAIN SETUP
-	waterPump.init(12);
-	stepMotor.init(6, 13, 19, 26, 0, 10000, 0);
-	light.init(5);
-	heater.init(25);
+	//waterPump.init(12);
+	stepMotor.init(19, 6, 13, 26, 0, 10000, 0);
+	//light.init(5);
+	//heater.init(25);
 
 	airsensor.init(1, 0x40);
 
