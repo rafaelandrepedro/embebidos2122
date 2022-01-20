@@ -14,7 +14,7 @@ int main(void)
     while(1)
     {
         lightVal = light.adcGetValue(0); //read from channel 0
-        watertemperatureVal = water.adcGetValue(1); //read from channel 1
+        watertemperatureVal = water.adcGetValue(7); //read from channel 1
 
 
         cout << "Light is: " << lightVal << "%" << endl;
