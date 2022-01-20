@@ -1,0 +1,1 @@
+cmd_/home/bruno/code/DeviceDriver/led/led.o := ~/buildroot/buildroot-cam2/output/host/bin/arm-buildroot-linux-uclibcgnueabihf-ld  -EL    -r -o /home/bruno/code/DeviceDriver/led/led.o /home/bruno/code/DeviceDriver/led/ledmodule.o /home/bruno/code/DeviceDriver/led/utils.o

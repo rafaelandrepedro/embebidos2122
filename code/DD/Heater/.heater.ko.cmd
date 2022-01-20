@@ -1,0 +1,1 @@
+cmd_/home/bruno/embebidos2122/code/DD/Heater/heater.ko := ~/buildroot/buildroot-cam/output/host/bin/arm-buildroot-linux-uclibcgnueabihf-ld -r  -EL  --build-id=sha1  -T scripts/module.lds -o /home/bruno/embebidos2122/code/DD/Heater/heater.ko /home/bruno/embebidos2122/code/DD/Heater/heater.o /home/bruno/embebidos2122/code/DD/Heater/heater.mod.o;  true

@@ -1,5 +1,5 @@
-obj-m := stepmotor.o
-stepmotor-objs:=stepmotormodule.o utils.o
+obj-m := heater.o
+heater-objs:=heatermodule.o utils.o
 KDIR := /home/bruno/buildroot/buildroot-cam/output/build/linux-custom
 ARCH ?= arm
 CROSS_COMPILE ?= ~/buildroot/buildroot-cam/output/host/bin/arm-buildroot-linux-uclibcgnueabihf-

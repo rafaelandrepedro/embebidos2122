@@ -1,0 +1,1 @@
+cmd_/home/bruno/embebidos2122/code/DD/Heater/modules.order := {   echo /home/bruno/embebidos2122/code/DD/Heater/heater.ko; :; } | awk '!x[$$0]++' - > /home/bruno/embebidos2122/code/DD/Heater/modules.order

@@ -1,0 +1,1 @@
+cmd_/home/bruno/code/DeviceDriver/waterpump/waterpump.mod := { echo  /home/bruno/code/DeviceDriver/waterpump/waterpumpmodule.o /home/bruno/code/DeviceDriver/waterpump/utils.o;  echo; } > /home/bruno/code/DeviceDriver/waterpump/waterpump.mod

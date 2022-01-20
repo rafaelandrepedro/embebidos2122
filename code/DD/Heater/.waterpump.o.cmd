@@ -1,0 +1,1 @@
+cmd_/home/bruno/code/DeviceDriver/waterpump/waterpump.o := ~/buildroot/buildroot-cam2/output/host/bin/arm-buildroot-linux-uclibcgnueabihf-ld  -EL    -r -o /home/bruno/code/DeviceDriver/waterpump/waterpump.o /home/bruno/code/DeviceDriver/waterpump/waterpumpmodule.o /home/bruno/code/DeviceDriver/waterpump/utils.o

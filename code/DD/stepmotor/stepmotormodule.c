@@ -36,9 +36,9 @@ static struct class *s_pDeviceClass;
 static struct device *s_pDeviceObject;
 struct GpioRegisters *s_pGpioRegisters;
 
-static const int StepmotorGpioPinA1 = 6;
+static const int StepmotorGpioPinA1 = 19;
 static const int StepmotorGpioPinA2 = 13;
-static const int StepmotorGpioPinB1 = 19;
+static const int StepmotorGpioPinB1 = 6;
 static const int StepmotorGpioPinB2 = 26;
 
 ssize_t stepmotor_device_write(struct file *pfile, const char __user *pbuff, size_t len, loff_t *off) { //tirar o static
