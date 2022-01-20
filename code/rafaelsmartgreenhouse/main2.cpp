@@ -82,6 +82,10 @@ void panic(char* msg);
 #define panic(m)		{perror(m); abort();}
 
 /*classes*/
+LDRsensor ldrsensor;
+WaterTempsensor watertempsensor;
+AirSensor airsensor;
+
 WaterPump waterPump;
 StepMotor stepMotor;
 Light light;
@@ -108,8 +112,6 @@ void* taskReadSensors(void*) {
 	int airTemperature, airHumidity;
 
 	//read air temperature
-	AirSensor airsensor;
-	airsensor.init(1, 0x40);
 	char buf[10];
 	buf[0]=0xE3;
 	airsensor.cwrite(buf);
@@ -134,6 +136,7 @@ void* taskReadSensors(void*) {
 	int waterTemperature;
 
 	//read water temperature
+	waterTemperature=watertempsensor.adcGetValue(1);
 
 	sem_wait(&semaphoreWaterTemperature);
 		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
@@ -142,6 +145,7 @@ void* taskReadSensors(void*) {
 	int lightLevel;
 
 	//read light level
+	lightLevel=ldrsensor.adcGetValue(0);
 
 	sem_wait(&semaphoreLightLevel);
 		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
@@ -379,6 +383,8 @@ int main(int count, char* args[])
 	stepMotor.init(6, 13, 19, 26, 0, 10000, 0);
 	light.init(5);
 	heater.init(25);
+
+	airsensor.init(1, 0x40);
 
 	//declare semaphores
 	if (sem_init(&semaphoreAirTemperature, 0, 1) != 0)
