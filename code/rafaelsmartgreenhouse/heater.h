@@ -8,15 +8,13 @@
 class Heater{
 	private:	
 		bool heaterState;
-		int GPIO;
 	public:
 		Heater();
-		Heater(int GPIO);
 		~Heater();
-		void init(int GPIO);
+        void init();
 		void turnOn();
 		void turnOff();
-		void set(unsigned int dutycycle);
+        void actuate(unsigned int dutycycle);
 		bool state();
 };
 

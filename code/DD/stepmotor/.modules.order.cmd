@@ -1,1 +1,1 @@
-cmd_/home/bruno/embebidos2122/code/DD/stepmotor/modules.order := {   echo /home/bruno/embebidos2122/code/DD/stepmotor/stepmotor.ko; :; } | awk '!x[$$0]++' - > /home/bruno/embebidos2122/code/DD/stepmotor/modules.order
+cmd_/home/computador/Documents/GitHub/embebidos2122/code/DD/stepmotor/modules.order := {   echo /home/computador/Documents/GitHub/embebidos2122/code/DD/stepmotor/stepmotor.ko; :; } | awk '!x[$$0]++' - > /home/computador/Documents/GitHub/embebidos2122/code/DD/stepmotor/modules.order

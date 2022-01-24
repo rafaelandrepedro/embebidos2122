@@ -7,12 +7,10 @@
 class Light{
 	private:	
 		bool lightState;
-		int GPIO;
-	public:
+    public:
 		Light();
-		Light(int GPIO);
 		~Light();
-		void init(int GPIO);
+        void init();
 		void turnOn();
 		void turnOff();
 		bool state();

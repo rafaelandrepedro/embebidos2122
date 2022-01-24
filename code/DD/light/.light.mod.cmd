@@ -1,1 +1,1 @@
-cmd_/home/bruno/embebidos2122/code/DD/light/light.mod := { echo  /home/bruno/embebidos2122/code/DD/light/lightmodule.o /home/bruno/embebidos2122/code/DD/light/utils.o;  echo; } > /home/bruno/embebidos2122/code/DD/light/light.mod
+cmd_/home/computador/Documents/GitHub/embebidos2122/code/DD/light/light.mod := { echo  /home/computador/Documents/GitHub/embebidos2122/code/DD/light/lightmodule.o /home/computador/Documents/GitHub/embebidos2122/code/DD/light/utils.o;  echo; } > /home/computador/Documents/GitHub/embebidos2122/code/DD/light/light.mod
