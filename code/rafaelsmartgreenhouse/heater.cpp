@@ -32,9 +32,9 @@ void Heater::actuate(unsigned int dutycycle)
     if(dutycycle<=100)
     {
         turnOn();
-        usleep(dutycycle*1000);
+        usleep(dutycycle*10000);
         turnOff();
-        usleep(100000-dutycycle*1000);
+        usleep(1000000-dutycycle*10000);
     }
 }
 

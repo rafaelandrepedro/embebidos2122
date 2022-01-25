@@ -139,8 +139,11 @@ void* taskReadSensors(void*) {
 	int waterTemperature;
 
 	//read water temperature
-	waterTemperature=watertempsensor.adcGetValue(1);
+	waterTemperature=watertempsensor.adcGetValue(7);
+
+  	printf("\033[1;33m");
 	printf("W temp lida: %d\n", waterTemperature);
+	printf("\033[0m");
 
 	sem_wait(&semaphoreWaterTemperature);
 		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
@@ -230,7 +233,10 @@ void* taskProcessAirTemperature(void*) {
 			tHeaterPower=(refTemperature+10-(int)result)*10;
 		else
 			tHeaterPower=0;
+			
+		printf("\033[1;33m");
 		printf("Temp processada: %f\n", result);
+		printf("\033[0m");
 	
 		pthread_mutex_lock(&mutexTargetHeaterPower);
 			targetHeaterPower = tHeaterPower;
@@ -257,7 +263,11 @@ void* taskProcessAirHumidity(void*) {
 			tMotorPosition=0;
 		else
 			tMotorPosition=256;
+			
+		printf("\033[1;33m");
 		printf("Hum processada: %f\n", result);
+		printf("\033[0m");
+		
 		
 		pthread_mutex_lock(&mutexTargetMotorPosition);
 			targetMotorPosition = tMotorPosition;
@@ -276,7 +286,11 @@ void* taskProcessLightLevel(void*) {
 		sem_wait(&semaphoreLightLevel);
 			if (!lightLevelBuffer.remove(&lightLevel)) {/*buffer empty*/ }
 		sem_post(&semaphoreLightLevel);
+		
+		printf("\033[1;33m");
 		printf("Lux lida: %d\n", lightLevel);
+		printf("\033[0m");
+		
 		//convert
 
 
@@ -309,9 +323,15 @@ void* taskActuateHeater(void*) {
 		int tHeaterPower=targetHeaterPower;
 		pthread_mutex_unlock(&mutexTargetHeaterPower);
 		//
+		printf("\033[1;31m");
 		printf("Set heater to %d\n", tHeaterPower);
-		heater.actuate(tHeaterPower);
-		sleep(4);
+		printf("\033[0m");
+		
+		for(int i=1;i<4;i++)
+			if(tHeaterPower)
+				heater.actuate(tHeaterPower);
+			else
+				sleep(1);
 	}
 	return NULL;
 }
@@ -322,7 +342,10 @@ void* taskActuateWindow(void*) {
 		int tMotorPosition=targetMotorPosition;
 		pthread_mutex_unlock(&mutexTargetMotorPosition);
 		//
+		printf("\033[1;31m");
 		printf("Rotate motor to %d degrees\n", tMotorPosition);
+		printf("\033[0m");
+		
 		stepMotor.rotateTo(tMotorPosition);
 		sleep(4);
 	}
@@ -335,7 +358,10 @@ void* taskActuateLight(void*) {
 		int tLightPower=targetLightPower;
 		pthread_mutex_unlock(&mutexTargetLightPower);
 		//
+		printf("\033[1;31m");
 		printf("Set light to %d\n", tLightPower);
+		printf("\033[0m");
+		
 		if(tLightPower)
 			light.turnOn();
 		else
@@ -351,7 +377,10 @@ void* taskActuateWaterPump(void*) {
 		int wPumpState=waterPumpState;
 		pthread_mutex_unlock(&mutexWaterPumpState);
 		//
+		printf("\033[1;31m");
 		printf("Set water pump to %d\n", wPumpState);
+		printf("\033[0m");
+		
 		if(wPumpState)
 			waterPump.turnOn();
 		else
