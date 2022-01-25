@@ -333,7 +333,7 @@ void* taskActuateLight(void*) {
 		int tLightPower=targetLightPower;
 		pthread_mutex_unlock(&mutexTargetLightPower);
 		//
-		printf("Set light to %d00\n", tLightPower);
+		printf("Set light to %d\n", tLightPower);
 		if(tLightPower)
 			light.turnOn();
 		else
@@ -349,7 +349,7 @@ void* taskActuateWaterPump(void*) {
 		int wPumpState=waterPumpState;
 		pthread_mutex_unlock(&mutexWaterPumpState);
 		//
-		printf("Set water pump to %d00\n", wPumpState);
+		printf("Set water pump to %d\n", wPumpState);
 		if(wPumpState)
 			waterPump.turnOn();
 		else
