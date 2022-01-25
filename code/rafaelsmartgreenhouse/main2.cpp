@@ -78,6 +78,9 @@ int targetHeaterPower;
 int targetLightPower;
 int waterPumpState;
 
+int refTemperature;
+int refHumidity;
+
 /*Critical error routine*/
 void panic(char* msg);
 #define panic(m)		{perror(m); abort();}
@@ -138,7 +141,7 @@ void* taskReadSensors(void*) {
 	int waterTemperature;
 
 	//read water temperature
-	//waterTemperature=watertempsensor.adcGetValue(1);
+	waterTemperature=watertempsensor.adcGetValue(1);
 
 	sem_wait(&semaphoreWaterTemperature);
 		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
@@ -147,7 +150,7 @@ void* taskReadSensors(void*) {
 	int lightLevel;
 
 	//read light level
-	//lightLevel=ldrsensor.adcGetValue(0);
+	lightLevel=ldrsensor.adcGetValue(0);
 
 	sem_wait(&semaphoreLightLevel);
 		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
@@ -222,10 +225,10 @@ void* taskProcessAirTemperature(void*) {
 		result = (175.72 * Temp_Code / 256) - 46.85;
 		printf("Temp processada: %d\n", (int)Temp_Code);
 	
-		if((int)result<12)
+		if((int)result<refTemperature)
 			tHeaterPower=100;
-		else if((int)result>12 && (int)result<22)
-			tHeaterPower=(22-(int)result)*10;
+		else if((int)result>refTemperature && (int)result<refTemperature+10)
+			tHeaterPower=(refTemperature+10-(int)result)*10;
 		else
 			tHeaterPower=0;
 		printf("result: %d\n",(int)result);
@@ -233,12 +236,7 @@ void* taskProcessAirTemperature(void*) {
 	
 		pthread_mutex_lock(&mutexTargetHeaterPower);
 			targetHeaterPower = tHeaterPower;
-		pthread_mutex_unlock(&mutexTargetHeaterPower);
-		
-		pthread_mutex_lock(&mutexTargetMotorPosition);
-			targetMotorPosition = tHeaterPower*5;
-		pthread_mutex_unlock(&mutexTargetMotorPosition);
-		
+		pthread_mutex_unlock(&mutexTargetHeaterPower);		
 		
 		sleep(4);
 	}
@@ -258,7 +256,7 @@ void* taskProcessAirHumidity(void*) {
 		float RH_Code = airHumidity;
 		result = (125 * RH_Code / 256) + 6;
 	
-		if(result<70)
+		if(result<refHumidity)
 			tMotorPosition=0;
 		else
 			tMotorPosition=256;
@@ -377,12 +375,15 @@ void* taskSetAirHumidity(void*) {
 int main(int count, char* args[])
 {
 	//MAIN SETUP
-	//waterPump.init(12);
-	stepMotor.init(19, 13, 6, 26, 0, 5000, 0);
-	//light.init(5);
-	//heater.init(25);
+	waterPump.init(25);//GPIO25
+	stepMotor.init(13, 6, 5, 26, 0, 5000, 0);//GPIO13,6,5,26
+	light.init(23);//GPIO23
+	heater.init(24);//GPIO24
 
 	airsensor.init(1, 0x40);
+
+	refTemperature=20;
+	refHumidity=40;
 
 	//declare semaphores
 	if (sem_init(&semaphoreAirTemperature, 0, 1) != 0)
