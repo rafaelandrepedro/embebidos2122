@@ -205,6 +205,8 @@ void* taskSendPhoto(void*) {
 	sem_post(&semaphoreProcessedPhotoBuffer);
 
 	//insert in the database
+	
+      //db.quarry("INSERT INTO COMPANY (ID,AIRTEMPERATURE,AIRHUMIDITY,LIGHTLEVEL,WATERTEMPERATURE) VALUES (1, 20, 40, 50, 20 ); ");
 	return NULL;
 }
 
@@ -382,6 +384,14 @@ int main(int count, char* args[])
 
 	refTemperature=20;
 	refHumidity=40;
+	
+	//Database db("database.db");
+   	//db.quarry("CREATE TABLE REPORT("  \
+      "ID INT PRIMARY KEY     NOT NULL," \
+      "AIRTEMPERATURE           FLOAT," \
+      "AIRHUMIDITY            FLOAT," \
+      "LIGHTLEVEL        FLOAT," \
+      "WATERTEMPERATURE         FLOAT);");
 
 	//declare semaphores
 	if (sem_init(&semaphoreAirTemperature, 0, 1) != 0)
