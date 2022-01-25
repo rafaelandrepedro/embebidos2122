@@ -1,9 +1,6 @@
 #include <iostream>
 #include <pthread.h>
 #include <sched.h>
-//#define prioInit() struct sched_param Priority_Param; int policy;
-//#define setPrio(tid, priority) pthread_getschedparam(tid, &policy, &Priority_Param); Priority_Param.sched_priority = priority; pthread_setschedparam(tid, policy, &Priority_Param)
-//#define getPrio(tid, priority) pthread_getschedparam(tid, &policy, &Priority_Param); priority = Priority_Param.sched_priority
 
 
 void* a(void* i){
@@ -43,10 +40,6 @@ int main()
 	pthread_create(&thread_id[i], &thread_attr, a,(void*)&arg[i]);
 	}
 	
-	while(1){
-    }
-	
-
 
     while(1){
     }
