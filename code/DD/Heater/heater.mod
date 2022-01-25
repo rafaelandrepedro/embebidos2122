@@ -1,2 +1,2 @@
-/home/bruno/embebidos2122/code/DD/Heater/heatermodule.o /home/bruno/embebidos2122/code/DD/Heater/utils.o
+/home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/heatermodule.o /home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/utils.o
 

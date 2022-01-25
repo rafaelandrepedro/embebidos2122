@@ -1,1 +1,1 @@
-cmd_/home/bruno/embebidos2122/code/DD/Heater/Module.symvers := sed 's/ko$$/o/' /home/bruno/embebidos2122/code/DD/Heater/modules.order | scripts/mod/modpost -m -a   -o /home/bruno/embebidos2122/code/DD/Heater/Module.symvers -e -i Module.symvers   -T -
+cmd_/home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/Module.symvers := sed 's/ko$$/o/' /home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/modules.order | scripts/mod/modpost -m -a   -o /home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/Module.symvers -e -i Module.symvers   -T -

@@ -36,18 +36,18 @@
 #endif
 
 
-void initPrio(int* thread_policy, pthread_attr_t* thread_attr, struct sched_param* thread_param){
+void initPrio(int* thread_policy, pthread_attr_t* thread_attr, struct sched_param* thread_param){/*
 	pthread_attr_init (thread_attr);
 	pthread_attr_getschedpolicy (thread_attr, thread_policy);
-	pthread_attr_getschedparam (thread_attr, thread_param);
+	pthread_attr_getschedparam (thread_attr, thread_param);*/
 }
 
-void setPrio(unsigned int priority, pthread_attr_t* thread_attr, struct sched_param* thread_param) {
+void setPrio(unsigned int priority, pthread_attr_t* thread_attr, struct sched_param* thread_param) {/*
 	thread_param->sched_priority = priority;
 	
 	pthread_attr_setschedparam (thread_attr, thread_param);
 	pthread_attr_setinheritsched (thread_attr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy (thread_attr, SCHED_RR);
+	pthread_attr_setschedpolicy (thread_attr, SCHED_RR);*/
 }
 
 /*Semaphores*/
@@ -121,14 +121,12 @@ void* taskReadSensors(void*) {
 	airsensor.cwrite(buf);
 	airsensor.cread(buf);
 	airTemperature=buf[0];
-	printf("Temp: %d\n", buf[0]);
 
 	//read air humidty
 	buf[0]=0xE5;
 	airsensor.cwrite(buf);
 	airsensor.cread(buf);
 	airHumidity=buf[0];
-	printf("Humidity: %d\n", buf[0]);
 
 	sem_wait(&semaphoreAirTemperature);
 		if (!airTemperatureBuffer.add(airTemperature)) {/*buffer full*/ }
@@ -142,6 +140,7 @@ void* taskReadSensors(void*) {
 
 	//read water temperature
 	waterTemperature=watertempsensor.adcGetValue(1);
+	printf("W temp lida: %d\n", waterTemperature);
 
 	sem_wait(&semaphoreWaterTemperature);
 		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
@@ -219,11 +218,9 @@ void* taskProcessAirTemperature(void*) {
 		sem_wait(&semaphoreAirTemperature);
 			if (!airTemperatureBuffer.remove(&airTemperature)) {/*buffer empty*/ }
 		sem_post(&semaphoreAirTemperature);
-		printf("Temp lida: %d\n", airTemperature);
 		//convert
-		float Temp_Code = airTemperature;
-		result = (175.72 * Temp_Code / 256) - 46.85;
-		printf("Temp processada: %d\n", (int)Temp_Code);
+		float Temp_Code = (float)airTemperature;
+		result = ((float)175.72 * (float)Temp_Code / (float)256) - (float)46.85;
 	
 		if((int)result<refTemperature)
 			tHeaterPower=100;
@@ -231,8 +228,7 @@ void* taskProcessAirTemperature(void*) {
 			tHeaterPower=(refTemperature+10-(int)result)*10;
 		else
 			tHeaterPower=0;
-		printf("result: %d\n",(int)result);
-		printf("tHeaterPower: %d\n",tHeaterPower);
+		printf("Temp processada: %f\n", result);
 	
 		pthread_mutex_lock(&mutexTargetHeaterPower);
 			targetHeaterPower = tHeaterPower;
@@ -251,20 +247,20 @@ void* taskProcessAirHumidity(void*) {
 		sem_wait(&semaphoreAirHumidity);
 			if (!airHumidityBuffer.remove(&airHumidity)) {/*buffer empty*/ }
 		sem_post(&semaphoreAirHumidity);
-	
 		//convert
-		float RH_Code = airHumidity;
-		result = (125 * RH_Code / 256) + 6;
+		float RH_Code = (float)airHumidity;
+		result = ((float)125 * (float)RH_Code / (float)256) + (float)6;
 	
 		if(result<refHumidity)
 			tMotorPosition=0;
 		else
 			tMotorPosition=256;
-		/*
+		printf("Hum processada: %f\n", result);
+		
 		pthread_mutex_lock(&mutexTargetMotorPosition);
 			targetMotorPosition = tMotorPosition;
 		pthread_mutex_unlock(&mutexTargetMotorPosition);
-		*/
+		
 		sleep(4);
 	}
 	return NULL;
@@ -278,7 +274,7 @@ void* taskProcessLightLevel(void*) {
 		sem_wait(&semaphoreLightLevel);
 			if (!lightLevelBuffer.remove(&lightLevel)) {/*buffer empty*/ }
 		sem_post(&semaphoreLightLevel);
-	
+		printf("Lux lida: %d\n", lightLevel);
 		//convert
 
 
@@ -311,7 +307,7 @@ void* taskActuateHeater(void*) {
 		int tHeaterPower=targetHeaterPower;
 		pthread_mutex_unlock(&mutexTargetHeaterPower);
 		//
-		printf("Actuate heater at %d%\n", tHeaterPower);
+		printf("Set heater to %d\n", tHeaterPower);
 		heater.actuate(tHeaterPower);
 		sleep(4);
 	}
@@ -324,7 +320,7 @@ void* taskActuateWindow(void*) {
 		int tMotorPosition=targetMotorPosition;
 		pthread_mutex_unlock(&mutexTargetMotorPosition);
 		//
-		printf("Actuate motor at %d%\n", tMotorPosition);
+		printf("Rotate motor to %d degrees\n", tMotorPosition);
 		stepMotor.rotateTo(tMotorPosition);
 		sleep(4);
 	}
@@ -337,6 +333,7 @@ void* taskActuateLight(void*) {
 		int tLightPower=targetLightPower;
 		pthread_mutex_unlock(&mutexTargetLightPower);
 		//
+		printf("Set light to %d00\n", tLightPower);
 		if(tLightPower)
 			light.turnOn();
 		else
@@ -352,6 +349,7 @@ void* taskActuateWaterPump(void*) {
 		int wPumpState=waterPumpState;
 		pthread_mutex_unlock(&mutexWaterPumpState);
 		//
+		printf("Set water pump to %d00\n", wPumpState);
 		if(wPumpState)
 			waterPump.turnOn();
 		else
@@ -375,10 +373,10 @@ void* taskSetAirHumidity(void*) {
 int main(int count, char* args[])
 {
 	//MAIN SETUP
-	waterPump.init(25);//GPIO25
+	waterPump.init();//GPIO25
 	stepMotor.init(13, 6, 5, 26, 0, 5000, 0);//GPIO13,6,5,26
-	light.init(23);//GPIO23
-	heater.init(24);//GPIO24
+	light.init();//GPIO23
+	heater.init();//GPIO24
 
 	airsensor.init(1, 0x40);
 
@@ -420,58 +418,62 @@ int main(int count, char* args[])
 	
 
 	pthread_t threadTakePhoto, threadProcessPhoto;
-	setPrio(7, &thread_attr, &thread_param);
-	pthread_create(&threadTakePhoto, &thread_attr, taskTakePhoto, NULL);
-	setPrio(6, &thread_attr, &thread_param);
-	pthread_create(&threadProcessPhoto, &thread_attr, taskProcessPhoto, NULL);
+	//setPrio(7, &thread_attr, &thread_param);
+	pthread_create(&threadTakePhoto, 0, taskTakePhoto, NULL);
+	//setPrio(6, &thread_attr, &thread_param);
+	pthread_create(&threadProcessPhoto, 0, taskProcessPhoto, NULL);
 	pthread_detach(threadTakePhoto);
 	pthread_detach(threadProcessPhoto);
 
+
+
 	pthread_t threadSendData, threadSendPhoto;
-	setPrio(4, &thread_attr, &thread_param);
-	pthread_create(&threadSendData, &thread_attr, taskSendData, NULL);
-	setPrio(5, &thread_attr, &thread_param);
-	pthread_create(&threadSendPhoto, &thread_attr, taskSendPhoto, NULL);
+	//setPrio(4, &thread_attr, &thread_param);
+	pthread_create(&threadSendData, 0, taskSendData, NULL);
+	//setPrio(5, &thread_attr, &thread_param);
+	pthread_create(&threadSendPhoto, 0, taskSendPhoto, NULL);
 	pthread_detach(threadSendData);
 	pthread_detach(threadSendPhoto);
 
 	pthread_t threadProcessAirTemperature, threadProcessAirHumidity, threadProcessLightLevel;
-	setPrio(3, &thread_attr, &thread_param);
-	pthread_create(&threadProcessAirTemperature, &thread_attr, taskProcessAirTemperature, NULL);
-	setPrio(3, &thread_attr, &thread_param);
-	pthread_create(&threadProcessAirHumidity, &thread_attr, taskProcessAirHumidity, NULL);
-	setPrio(3, &thread_attr, &thread_param);	
-	pthread_create(&threadProcessLightLevel, &thread_attr, taskProcessLightLevel, NULL);
+	//setPrio(3, &thread_attr, &thread_param);
+	pthread_create(&threadProcessAirTemperature, 0, taskProcessAirTemperature, NULL);
+	//setPrio(3, &thread_attr, &thread_param);
+	pthread_create(&threadProcessAirHumidity, 0, taskProcessAirHumidity, NULL);
+	//setPrio(3, &thread_attr, &thread_param);	
+	pthread_create(&threadProcessLightLevel, 0, taskProcessLightLevel, NULL);
 	pthread_detach(threadProcessAirTemperature);
 	pthread_detach(threadProcessAirHumidity);
 	pthread_detach(threadProcessLightLevel);
 
 	pthread_t threadActuateHeater, threadActuateWindow, threadActuateLight, threadActuateWaterPump;
-	setPrio(1, &thread_attr, &thread_param);
-	pthread_create(&threadActuateHeater, &thread_attr, taskActuateHeater, NULL);
-	setPrio(1, &thread_attr, &thread_param);
-	pthread_create(&threadActuateWindow, &thread_attr, taskActuateWindow, NULL);
-	setPrio(1, &thread_attr, &thread_param);
-	pthread_create(&threadActuateLight, &thread_attr, taskActuateLight, NULL);
-	setPrio(1, &thread_attr, &thread_param);
-	pthread_create(&threadActuateWaterPump, &thread_attr, taskActuateWaterPump, NULL);
+	//setPrio(1, &thread_attr, &thread_param);
+	pthread_create(&threadActuateHeater, 0, taskActuateHeater, NULL);
+	//setPrio(1, &thread_attr, &thread_param);
+	pthread_create(&threadActuateWindow, 0, taskActuateWindow, NULL);
+	//setPrio(1, &thread_attr, &thread_param);
+	pthread_create(&threadActuateLight, 0, taskActuateLight, NULL);
+	//setPrio(1, &thread_attr, &thread_param);
+	pthread_create(&threadActuateWaterPump, 0, taskActuateWaterPump, NULL);
 	pthread_detach(threadActuateHeater);
 	pthread_detach(threadActuateWindow);
 	pthread_detach(threadActuateLight);
 	pthread_detach(threadActuateWaterPump);
 
 	pthread_t threadCheckWifiDataReception;
-	setPrio(6, &thread_attr, &thread_param);
-	pthread_create(&threadCheckWifiDataReception, &thread_attr, taskCheckWifiDataReception, NULL);
+	//setPrio(6, &thread_attr, &thread_param);
+	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, NULL);
 	pthread_detach(threadCheckWifiDataReception);
 	
 	pthread_t threadSetAirTemperature, threadSetAirHumidity;
-	setPrio(2, &thread_attr, &thread_param);
-	pthread_create(&threadSetAirTemperature, &thread_attr, taskSetAirTemperature, NULL);
-	setPrio(2, &thread_attr, &thread_param);
-	pthread_create(&threadSetAirHumidity, &thread_attr, taskSetAirHumidity, NULL);
+	//setPrio(2, &thread_attr, &thread_param);
+	pthread_create(&threadSetAirTemperature, 0, taskSetAirTemperature, NULL);
+	//setPrio(2, &thread_attr, &thread_param);
+	pthread_create(&threadSetAirHumidity, 0, taskSetAirHumidity, NULL);
 	pthread_detach(threadSetAirTemperature);
 	pthread_detach(threadSetAirHumidity);
+
+
 
 	while (1)
 	{

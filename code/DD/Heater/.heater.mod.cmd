@@ -1,1 +1,1 @@
-cmd_/home/bruno/embebidos2122/code/DD/Heater/heater.mod := { echo  /home/bruno/embebidos2122/code/DD/Heater/heatermodule.o /home/bruno/embebidos2122/code/DD/Heater/utils.o;  echo; } > /home/bruno/embebidos2122/code/DD/Heater/heater.mod
+cmd_/home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/heater.mod := { echo  /home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/heatermodule.o /home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/utils.o;  echo; } > /home/computador/Documents/GitHub/embebidos2122/code/DD/Heater/heater.mod
