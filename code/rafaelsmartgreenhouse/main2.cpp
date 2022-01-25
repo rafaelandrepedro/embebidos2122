@@ -19,8 +19,9 @@
 //#include <sys/semaphore.h>
 
 #include "airsensor.h"
-#include "WaterTempsensor.h"
 #include "LDRsensor.h"
+#include "WaterTempsensor.h"
+
 
 #include "buffer.h"
 
@@ -113,6 +114,30 @@ void signal_handler(int sig) {
 
 void* taskReadSensors(void*) {
 	while (1){
+	
+	int waterTemperature;
+	
+	//read water temperature
+	waterTemperature=watertempsensor.adcGetValue(1);
+
+  	printf("\033[1;33m");
+	printf("W temp lida: %d\n", waterTemperature);
+	printf("\033[0m");
+
+	sem_wait(&semaphoreWaterTemperature);
+		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
+	sem_post(&semaphoreWaterTemperature);
+
+	int lightLevel;
+
+	//read light level
+	lightLevel=ldrsensor.adcGetValue(0);
+
+	sem_wait(&semaphoreLightLevel);
+		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
+	sem_post(&semaphoreLightLevel);
+
+	printf("Values %d %d\n",waterTemperature, lightLevel);
 
 	int airTemperature, airHumidity;
 	char buf[10];
@@ -136,27 +161,10 @@ void* taskReadSensors(void*) {
 		if (!airHumidityBuffer.add(airHumidity)) {/*buffer full*/ }
 	sem_post(&semaphoreAirHumidity);
 
-	int waterTemperature;
+	
 
-	//read water temperature
-	waterTemperature=watertempsensor.adcGetValue(7);
-
-  	printf("\033[1;33m");
-	printf("W temp lida: %d\n", waterTemperature);
-	printf("\033[0m");
-
-	sem_wait(&semaphoreWaterTemperature);
-		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
-	sem_post(&semaphoreWaterTemperature);
-
-	int lightLevel;
-
-	//read light level
-	lightLevel=ldrsensor.adcGetValue(0);
-
-	sem_wait(&semaphoreLightLevel);
-		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
-	sem_post(&semaphoreLightLevel);
+	
+	printf("Values %d %d %d %d\n", airTemperature, airHumidity, waterTemperature, lightLevel);
 	sleep(5);
 	}
 	return NULL;
@@ -227,7 +235,7 @@ void* taskProcessAirTemperature(void*) {
 		float Temp_Code = (float)airTemperature;
 		result = ((float)175.72 * (float)Temp_Code / (float)256) - (float)46.85;
 	
-		if((int)result<refTemperature)
+		if((int)result<=refTemperature)
 			tHeaterPower=100;
 		else if((int)result>refTemperature && (int)result<refTemperature+10)
 			tHeaterPower=(refTemperature+10-(int)result)*10;
@@ -259,10 +267,12 @@ void* taskProcessAirHumidity(void*) {
 		float RH_Code = (float)airHumidity;
 		result = ((float)125 * (float)RH_Code / (float)256) + (float)6;
 	
-		if(result<refHumidity)
-			tMotorPosition=0;
-		else
+		if((int)result<=refHumidity)
 			tMotorPosition=256;
+		else if((int)result>refHumidity && (int)result<refHumidity+10)
+			tMotorPosition=(refHumidity+10-(int)result)*25.6;
+		else
+			tMotorPosition=0;
 			
 		printf("\033[1;33m");
 		printf("Hum processada: %f\n", result);
@@ -403,16 +413,23 @@ void* taskSetAirHumidity(void*) {
 //슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬�
 int main(int count, char* args[])
 {
+		
+
+		
+	/*
+	printf("\033[0;37m");
 	//MAIN SETUP
 	waterPump.init();//GPIO25
 	stepMotor.init(13, 6, 5, 26, 0, 5000, 0);//GPIO13,6,5,26
 	light.init();//GPIO23
 	heater.init();//GPIO24
-
-	airsensor.init(1, 0x40);
+	
+	
 
 	refTemperature=20;
-	refHumidity=40;
+	refHumidity=100;
+	
+	
 	
 	//Database db("database.db");
    	//db.quarry("CREATE TABLE REPORT("  \
@@ -421,7 +438,7 @@ int main(int count, char* args[])
       "AIRHUMIDITY            FLOAT," \
       "LIGHTLEVEL        FLOAT," \
       "WATERTEMPERATURE         FLOAT);");
-
+*/
 	//declare semaphores
 	if (sem_init(&semaphoreAirTemperature, 0, 1) != 0)
 	{
@@ -455,7 +472,7 @@ int main(int count, char* args[])
 	initPrio(&thread_policy, &thread_attr, &thread_param);
 	
 	
-
+	
 	pthread_t threadTakePhoto, threadProcessPhoto;
 	//setPrio(7, &thread_attr, &thread_param);
 	pthread_create(&threadTakePhoto, 0, taskTakePhoto, NULL);
@@ -473,7 +490,7 @@ int main(int count, char* args[])
 	pthread_create(&threadSendPhoto, 0, taskSendPhoto, NULL);
 	pthread_detach(threadSendData);
 	pthread_detach(threadSendPhoto);
-
+	
 	pthread_t threadProcessAirTemperature, threadProcessAirHumidity, threadProcessLightLevel;
 	//setPrio(3, &thread_attr, &thread_param);
 	pthread_create(&threadProcessAirTemperature, 0, taskProcessAirTemperature, NULL);
@@ -484,7 +501,7 @@ int main(int count, char* args[])
 	pthread_detach(threadProcessAirTemperature);
 	pthread_detach(threadProcessAirHumidity);
 	pthread_detach(threadProcessLightLevel);
-
+	
 	pthread_t threadActuateHeater, threadActuateWindow, threadActuateLight, threadActuateWaterPump;
 	//setPrio(1, &thread_attr, &thread_param);
 	pthread_create(&threadActuateHeater, 0, taskActuateHeater, NULL);
@@ -495,10 +512,10 @@ int main(int count, char* args[])
 	//setPrio(1, &thread_attr, &thread_param);
 	pthread_create(&threadActuateWaterPump, 0, taskActuateWaterPump, NULL);
 	pthread_detach(threadActuateHeater);
-	pthread_detach(threadActuateWindow);
+	//pthread_detach(threadActuateWindow);
 	pthread_detach(threadActuateLight);
 	pthread_detach(threadActuateWaterPump);
-
+	
 	pthread_t threadCheckWifiDataReception;
 	//setPrio(6, &thread_attr, &thread_param);
 	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, NULL);
@@ -511,13 +528,14 @@ int main(int count, char* args[])
 	pthread_create(&threadSetAirHumidity, 0, taskSetAirHumidity, NULL);
 	pthread_detach(threadSetAirTemperature);
 	pthread_detach(threadSetAirHumidity);
-
-
-
+	
+	airsensor.init(1, 0x40);
+	
 	while (1)
 	{
 		taskReadSensors(NULL);
 	}
+	
 
 	int pid = fork();//new daemon
 	if (pid < 0) {//fail
@@ -528,6 +546,7 @@ int main(int count, char* args[])
 		printf("Deamon PID: %d\n", pid);
 		exit(EXIT_SUCCESS);
 	}
+	
 	int sid = setsid();//new session
 	if (sid < 0) {//fail
 		syslog(LOG_ERR, "%s\n", "setsid");
@@ -538,6 +557,7 @@ int main(int count, char* args[])
 		syslog(LOG_ERR, "%s\n", "chdir");
 		exit(EXIT_FAILURE);
 	}
+	
 	umask(0);//mask
 	close(STDIN_FILENO);  // close standard input file descriptor
 	close(STDOUT_FILENO); // close standard output file descriptor

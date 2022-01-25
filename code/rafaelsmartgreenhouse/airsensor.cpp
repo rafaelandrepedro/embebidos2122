@@ -2,13 +2,11 @@
 
 
 Airsensor::Airsensor(){
-	system("echo config");
 	system("modprobe i2c-bcm2835");
 	system("modprobe i2c-dev");
 }
 
 Airsensor::Airsensor(int adapter_nr, int addr){
-	system("echo config");
 	system("modprobe i2c-bcm2835");
 	system("modprobe i2c-dev");
 	init(adapter_nr, addr);
