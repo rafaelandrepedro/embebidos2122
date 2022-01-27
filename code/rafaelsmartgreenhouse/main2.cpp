@@ -161,10 +161,6 @@ void* taskReadSensors(void*) {
 		if (!airHumidityBuffer.add(airHumidity)) {/*buffer full*/ }
 	sem_post(&semaphoreAirHumidity);
 
-	
-
-	
-	printf("Values %d %d %d %d\n", airTemperature, airHumidity, waterTemperature, lightLevel);
 	sleep(5);
 	}
 	return NULL;
