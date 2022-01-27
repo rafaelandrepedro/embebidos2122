@@ -36,19 +36,34 @@
 #define NULL 0
 #endif
 
-
-void initPrio(int* thread_policy, pthread_attr_t* thread_attr, struct sched_param* thread_param){/*
+/**
+ * @brief initialization of the thread priority attributes
+ *
+ * @param[out] policy policy used by the scheduler
+ * @param[out] thread_attr thread attribute struct
+ * @param[out] sched_param list of parameters used by the scheduler
+ * @return void
+ */
+void initPrio(int* thread_policy, pthread_attr_t* thread_attr, struct sched_param* thread_param){
 	pthread_attr_init (thread_attr);
 	pthread_attr_getschedpolicy (thread_attr, thread_policy);
-	pthread_attr_getschedparam (thread_attr, thread_param);*/
+	pthread_attr_getschedparam (thread_attr, thread_param);
 }
 
-void setPrio(unsigned int priority, pthread_attr_t* thread_attr, struct sched_param* thread_param) {/*
+/**
+ * @brief set the priority of a thread
+ *
+ * @param[in] priority priority value (the higher the sooner it will run)
+ * @param[in] thread_attr thread attribute struct
+ * @param[in] sched_param list of parameters used by the scheduler
+ * @return void
+ */
+void setPrio(unsigned int priority, pthread_attr_t* thread_attr, struct sched_param* thread_param) {
 	thread_param->sched_priority = priority;
 	
-	pthread_attr_setschedparam (thread_attr, thread_param);
 	pthread_attr_setinheritsched (thread_attr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy (thread_attr, SCHED_RR);*/
+	pthread_attr_setschedpolicy (thread_attr, SCHED_RR);
+	pthread_attr_setschedparam (thread_attr, thread_param);
 }
 
 /*Semaphores*/
@@ -90,14 +105,18 @@ void panic(char* msg);
 LDRsensor ldrsensor;
 WaterTempsensor watertempsensor;
 Airsensor airsensor;
-
 WaterPump waterPump;
 StepMotor stepMotor;
 Light light;
 Heater heater;
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
-
+/**
+ * @brief signal handler to handle the hangup and terminate signals
+ *
+ * @param[in] sig the signal recieved
+ * @return void
+ */
 void signal_handler(int sig) {
 	switch(sig) {
 		case SIGHUP:
@@ -111,10 +130,14 @@ void signal_handler(int sig) {
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+/**
+ * @brief reads the sensors and stores the values in the buffers
+ *
+ * @param[out] the values read
+ * @return void
+ */
+void taskReadSensors(int values[4]) {
 
-void* taskReadSensors(void*) {
-	while (1){
-	
 	int waterTemperature;
 	
 	//read water temperature
@@ -137,8 +160,6 @@ void* taskReadSensors(void*) {
 		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
 	sem_post(&semaphoreLightLevel);
 
-	printf("Values %d %d\n",waterTemperature, lightLevel);
-
 	int airTemperature, airHumidity;
 	char buf[10];
 	//read air temperature
@@ -152,6 +173,9 @@ void* taskReadSensors(void*) {
 	airsensor.cwrite(buf);
 	airsensor.cread(buf);
 	airHumidity=buf[0];
+	
+	airTemperature=10000;
+	airHumidity=10000;
 
 	sem_wait(&semaphoreAirTemperature);
 		if (!airTemperatureBuffer.add(airTemperature)) {/*buffer full*/ }
@@ -160,23 +184,40 @@ void* taskReadSensors(void*) {
 	sem_wait(&semaphoreAirHumidity);
 		if (!airHumidityBuffer.add(airHumidity)) {/*buffer full*/ }
 	sem_post(&semaphoreAirHumidity);
-
-	sleep(5);
-	}
-	return NULL;
+	
+	values[0]=waterTemperature;
+	values[1]=lightLevel;
+	values[2]=airTemperature;
+	values[3]=airHumidity;
+	
+	return;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
-
+/**
+ * @brief takes a photo and stores in the rasp
+ *
+ * @return void
+ */
 void* taskTakePhoto(void*) {
 	return NULL;
 }
+
+/**
+ * @brief moves the photo into a specific directory
+ *
+ * @return void
+ */
 void* taskProcessPhoto(void*) {
 	return NULL;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
-
+/**
+ * @brief stores the sensor values into the database
+ *
+ * @return void
+ */
 void* taskSendData(void*) {
 	int airTemperature, airHumidity;
 
@@ -201,24 +242,30 @@ void* taskSendData(void*) {
 	sem_post(&semaphoreLightLevel);
 
 	//insert in the database
+	//db.quarry("INSERT INTO COMPANY (ID,AIRTEMPERATURE,AIRHUMIDITY,LIGHTLEVEL,WATERTEMPERATURE) VALUES (1, 20, 40, 50, 20 ); ");
 	return NULL;
 }
 
+/**
+ * @brief sends the photo to the mobile app
+ *
+ * @return void
+ */
 void* taskSendPhoto(void*) {
 	//photo struct
 
-	sem_wait(&semaphoreProcessedPhotoBuffer);
-		//while (!lightLevelBuffer.remove(/*//photo struct*/)) {/*buffer empty*/ }
-	sem_post(&semaphoreProcessedPhotoBuffer);
 
 	//insert in the database
-	
-      //db.quarry("INSERT INTO COMPANY (ID,AIRTEMPERATURE,AIRHUMIDITY,LIGHTLEVEL,WATERTEMPERATURE) VALUES (1, 20, 40, 50, 20 ); ");
 	return NULL;
 }
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
+/**
+ * @brief converts the air temperature from the buffer and compares with the reference temperature, then sends a signal to the actuation variable of the heater
+ *
+ * @return void
+ */
 void* taskProcessAirTemperature(void*) {
 	while(1){
 		int airTemperature, tHeaterPower;
@@ -251,6 +298,11 @@ void* taskProcessAirTemperature(void*) {
 	return NULL;
 }
 
+/**
+ * @brief converts the air humidity from the buffer and compares with the reference humidity, then sends a signal to the actuation variable of the stepmotor
+ *
+ * @return void
+ */
 void* taskProcessAirHumidity(void*) {
 	while(1){
 		int airHumidity, tMotorPosition;
@@ -284,6 +336,11 @@ void* taskProcessAirHumidity(void*) {
 	return NULL;
 }
 
+/**
+ * @brief takes the light level from the buffer and compares with a reference light value, checks the sleeping time and then sends a signal to the actuation variables of the light and the water pump
+ *
+ * @return void
+ */
 void* taskProcessLightLevel(void*) {
 	while(1){
 		int lightLevel, tLightPower, wPumpState;
@@ -323,6 +380,11 @@ void* taskProcessLightLevel(void*) {
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
+/**
+ * @brief checks the heater actuation variable and sets the heater to the target temperature
+ *
+ * @return void
+ */
 void* taskActuateHeater(void*) {
 	while(1){
 		pthread_mutex_lock(&mutexTargetHeaterPower);
@@ -342,6 +404,11 @@ void* taskActuateHeater(void*) {
 	return NULL;
 }
 
+/**
+ * @brief checks the stepmotor actuation variable and sets the stepmotor angle to the target position
+ *
+ * @return void
+ */
 void* taskActuateWindow(void*) {
 	while(1){
 		pthread_mutex_lock(&mutexTargetMotorPosition);
@@ -358,6 +425,12 @@ void* taskActuateWindow(void*) {
 	return NULL;
 }
 
+
+/**
+ * @brief checks the light actuation variable and sets the LED tape ON or OFF accordingly 
+ *
+ * @return void
+ */
 void* taskActuateLight(void*) {
 	while(1){
 		pthread_mutex_lock(&mutexTargetLightPower);
@@ -377,6 +450,11 @@ void* taskActuateLight(void*) {
 	return NULL;
 }
 
+/**
+ * @brief checks the water pump actuation variable and sets the water pump ON or OFF accordingly 
+ *
+ * @return void
+ */
 void* taskActuateWaterPump(void*) {
 	while(1){
 		pthread_mutex_lock(&mutexWaterPumpState);
@@ -398,10 +476,25 @@ void* taskActuateWaterPump(void*) {
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 
+/**
+ * @brief searches for a client and connects to it if found
+ *
+ * @return void
+ */
 void* taskCheckWifiDataReception(void*) {return NULL;}
+/**
+ * @brief sets the air temperature reference to a value given from the mobile app
+ *
+ * @return void
+ */
 void* taskSetAirTemperature(void*) {
 	return NULL;
 }
+/**
+ * @brief sets the air humidity reference to a value given from the mobile app
+ *
+ * @return void
+ */
 void* taskSetAirHumidity(void*) {
 	return NULL;
 }
@@ -409,24 +502,27 @@ void* taskSetAirHumidity(void*) {
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 int main(int count, char* args[])
 {
-		
 
-		
-	/*
-	printf("\033[0;37m");
 	//MAIN SETUP
+		
+	//set text color to normal
+	printf("\033[0;37m");
+	
+	
+	//init the system classes
 	waterPump.init();//GPIO25
 	stepMotor.init(13, 6, 5, 26, 0, 5000, 0);//GPIO13,6,5,26
 	light.init();//GPIO23
 	heater.init();//GPIO24
+	airsensor.init(1, 0x40);
 	
 	
-
+	//set the startup reference control values
 	refTemperature=20;
 	refHumidity=100;
 	
 	
-	
+	//setup the database
 	//Database db("database.db");
    	//db.quarry("CREATE TABLE REPORT("  \
       "ID INT PRIMARY KEY     NOT NULL," \
@@ -434,8 +530,8 @@ int main(int count, char* args[])
       "AIRHUMIDITY            FLOAT," \
       "LIGHTLEVEL        FLOAT," \
       "WATERTEMPERATURE         FLOAT);");
-*/
-	//declare semaphores
+
+	//setup the system semaphores
 	if (sem_init(&semaphoreAirTemperature, 0, 1) != 0)
 	{
 		// Error: initialization failed
@@ -461,6 +557,7 @@ int main(int count, char* args[])
 		// Error: initialization failed
 	}
 	
+	//setup the thread handlers
 	int thread_policy;
 	pthread_attr_t thread_attr;
 	struct sched_param thread_param;
@@ -468,79 +565,81 @@ int main(int count, char* args[])
 	initPrio(&thread_policy, &thread_attr, &thread_param);
 	
 	
-	
+	//threads: photo
 	pthread_t threadTakePhoto, threadProcessPhoto;
-	//setPrio(7, &thread_attr, &thread_param);
+	setPrio(7, &thread_attr, &thread_param);
 	pthread_create(&threadTakePhoto, 0, taskTakePhoto, NULL);
-	//setPrio(6, &thread_attr, &thread_param);
+	setPrio(6, &thread_attr, &thread_param);
 	pthread_create(&threadProcessPhoto, 0, taskProcessPhoto, NULL);
 	pthread_detach(threadTakePhoto);
 	pthread_detach(threadProcessPhoto);
 
-
-
+	//threads: send to mobile app
 	pthread_t threadSendData, threadSendPhoto;
-	//setPrio(4, &thread_attr, &thread_param);
+	setPrio(4, &thread_attr, &thread_param);
 	pthread_create(&threadSendData, 0, taskSendData, NULL);
-	//setPrio(5, &thread_attr, &thread_param);
+	setPrio(5, &thread_attr, &thread_param);
 	pthread_create(&threadSendPhoto, 0, taskSendPhoto, NULL);
 	pthread_detach(threadSendData);
 	pthread_detach(threadSendPhoto);
 	
+	//threads: process raw values and send actuation controls
 	pthread_t threadProcessAirTemperature, threadProcessAirHumidity, threadProcessLightLevel;
-	//setPrio(3, &thread_attr, &thread_param);
+	setPrio(3, &thread_attr, &thread_param);
 	pthread_create(&threadProcessAirTemperature, 0, taskProcessAirTemperature, NULL);
-	//setPrio(3, &thread_attr, &thread_param);
+	setPrio(3, &thread_attr, &thread_param);
 	pthread_create(&threadProcessAirHumidity, 0, taskProcessAirHumidity, NULL);
-	//setPrio(3, &thread_attr, &thread_param);	
+	setPrio(3, &thread_attr, &thread_param);	
 	pthread_create(&threadProcessLightLevel, 0, taskProcessLightLevel, NULL);
 	pthread_detach(threadProcessAirTemperature);
 	pthread_detach(threadProcessAirHumidity);
 	pthread_detach(threadProcessLightLevel);
 	
+	//threads: control the actuators
 	pthread_t threadActuateHeater, threadActuateWindow, threadActuateLight, threadActuateWaterPump;
-	//setPrio(1, &thread_attr, &thread_param);
+	setPrio(1, &thread_attr, &thread_param);
 	pthread_create(&threadActuateHeater, 0, taskActuateHeater, NULL);
-	//setPrio(1, &thread_attr, &thread_param);
+	setPrio(1, &thread_attr, &thread_param);
 	pthread_create(&threadActuateWindow, 0, taskActuateWindow, NULL);
-	//setPrio(1, &thread_attr, &thread_param);
+	setPrio(1, &thread_attr, &thread_param);
 	pthread_create(&threadActuateLight, 0, taskActuateLight, NULL);
-	//setPrio(1, &thread_attr, &thread_param);
+	setPrio(1, &thread_attr, &thread_param);
 	pthread_create(&threadActuateWaterPump, 0, taskActuateWaterPump, NULL);
 	pthread_detach(threadActuateHeater);
-	//pthread_detach(threadActuateWindow);
+	pthread_detach(threadActuateWindow);
 	pthread_detach(threadActuateLight);
 	pthread_detach(threadActuateWaterPump);
 	
+	//threads: connect to mobile app
 	pthread_t threadCheckWifiDataReception;
-	//setPrio(6, &thread_attr, &thread_param);
+	setPrio(6, &thread_attr, &thread_param);
 	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, NULL);
 	pthread_detach(threadCheckWifiDataReception);
 	
+	//threads: set reference parameters
 	pthread_t threadSetAirTemperature, threadSetAirHumidity;
-	//setPrio(2, &thread_attr, &thread_param);
+	setPrio(2, &thread_attr, &thread_param);
 	pthread_create(&threadSetAirTemperature, 0, taskSetAirTemperature, NULL);
-	//setPrio(2, &thread_attr, &thread_param);
+	setPrio(2, &thread_attr, &thread_param);
 	pthread_create(&threadSetAirHumidity, 0, taskSetAirHumidity, NULL);
 	pthread_detach(threadSetAirTemperature);
 	pthread_detach(threadSetAirHumidity);
 	
-	airsensor.init(1, 0x40);
-	
-	while (1)
-	{
-		taskReadSensors(NULL);
-	}
-	
-
 	int pid = fork();//new daemon
+	
 	if (pid < 0) {//fail
 		syslog(LOG_ERR, "%s\n", "fork");
 		exit(EXIT_FAILURE);
 	}
+	
 	if (pid > 0) {//success
 		printf("Deamon PID: %d\n", pid);
-		exit(EXIT_SUCCESS);
+		while(1){
+			sleep(5);
+			int values[4];
+			taskReadSensors(values);
+		}
+		pthread_exit(NULL);
 	}
 	
 	int sid = setsid();//new session
@@ -548,6 +647,7 @@ int main(int count, char* args[])
 		syslog(LOG_ERR, "%s\n", "setsid");
 		exit(EXIT_FAILURE);
 	}
+	
 	//change dir to root
 	if (chdir("/") < 0) {//fail
 		syslog(LOG_ERR, "%s\n", "chdir");
@@ -561,9 +661,22 @@ int main(int count, char* args[])
 	signal(SIGHUP, signal_handler); /* catch hangup signal */
 	signal(SIGTERM, signal_handler); /* catch kill signal */
 
+	int fd;
+	
+	if ((fd = open("/var/log/system.log",	O_CREAT | O_WRONLY | O_APPEND, 0600)) < 0) {
+			perror("open");
+			exit(EXIT_FAILURE);
+	}
+
 	//MAIN LOOP
 	while (1)
 	{
-		taskReadSensors(NULL);
+		sleep(5);
+		char buf[10];
+		int values[4];
+		taskReadSensors(values);
+		sprintf(buf, "%8d,%8d,%8d,%8d\n", values[0], values[1], values[2], values[3]);
+		write(fd, buf, 37);
 	}
+	close(fd);
 }
