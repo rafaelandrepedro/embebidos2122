@@ -8,6 +8,7 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
+#include <sstream>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/syslog.h>
@@ -18,9 +19,9 @@
 #include <mqueue.h>   /* mq_* functions */
 
 /* name of the POSIX object referencing the queue */
-#define MSGQOBJ_NAME    "/myqueue123"
+#define MSGQOBJ_NAME    "/queue0000"
 /* max length of a message (just for this process) */
-#define MAX_MSG_LEN     70
+#define MAX_MSG_LEN     10000
 
 //#include <sys/semaphore.h>
 
@@ -149,22 +150,10 @@ void taskReadSensors(int values[4]) {
 	//read water temperature
 	waterTemperature=watertempsensor.adcGetValue(1);
 
-  	printf("\033[1;33m");
-	printf("W temp lida: %d\n", waterTemperature);
-	printf("\033[0m");
-
-	sem_wait(&semaphoreWaterTemperature);
-		if (!waterTemperatureBuffer.add(waterTemperature)) {/*buffer full*/ }
-	sem_post(&semaphoreWaterTemperature);
-
 	int lightLevel;
 
 	//read light level
 	lightLevel=ldrsensor.adcGetValue(0);
-
-	sem_wait(&semaphoreLightLevel);
-		if (!lightLevelBuffer.add(lightLevel)) {/*buffer full*/ }
-	sem_post(&semaphoreLightLevel);
 
 	int airTemperature, airHumidity;
 	char buf[10];
@@ -179,17 +168,6 @@ void taskReadSensors(int values[4]) {
 	airsensor.cwrite(buf);
 	airsensor.cread(buf);
 	airHumidity=buf[0];
-	
-	airTemperature=10000;
-	airHumidity=10000;
-
-	sem_wait(&semaphoreAirTemperature);
-		if (!airTemperatureBuffer.add(airTemperature)) {/*buffer full*/ }
-	sem_post(&semaphoreAirTemperature);
-
-	sem_wait(&semaphoreAirHumidity);
-		if (!airHumidityBuffer.add(airHumidity)) {/*buffer full*/ }
-	sem_post(&semaphoreAirHumidity);
 	
 	values[0]=waterTemperature;
 	values[1]=lightLevel;
@@ -206,7 +184,7 @@ void taskReadSensors(int values[4]) {
  * @return void
  */
 void* taskTakePhoto(void*) {
-	system("raspistill -o [nome]");
+	//system("raspistill -o [nome]");
 	return NULL;
 }
 
@@ -632,6 +610,16 @@ int main(int count, char* args[])
 	pthread_detach(threadSetAirTemperature);
 	pthread_detach(threadSetAirHumidity);
 	
+	
+	mqd_t msgq_id;	
+		
+	msgq_id = mq_open(MSGQOBJ_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, NULL);
+	if (msgq_id == (mqd_t)-1) {
+		perror("In mq_open()");
+		exit(1);
+	}
+	
+	
 	int pid = fork();//new daemon
 	
 	if (pid < 0) {//fail
@@ -643,8 +631,43 @@ int main(int count, char* args[])
 		printf("Deamon PID: %d\n", pid);
 		while(1){
 			sleep(5);
-			int values[4];
-			taskReadSensors(values);
+			//int values[4];
+			//taskReadSensors(values);
+		    
+			int msgsz;
+			unsigned int sender;
+			char msg[MAX_MSG_LEN];
+			std::string str;
+			/* getting a message */
+			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
+			
+			sem_wait(&semaphoreWaterTemperature);
+				if (!waterTemperatureBuffer.add(std::atoi(msg))) {/*buffer full*/ }
+			sem_post(&semaphoreWaterTemperature);
+			
+			printf("\033[1;33m");
+			printf("W temp lida: %d\n", std::atoi(msg));
+			printf("\033[0m");
+			
+			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
+			
+			sem_wait(&semaphoreLightLevel);
+				if (!lightLevelBuffer.add(std::atoi(msg))) {/*buffer full*/ }
+			sem_post(&semaphoreLightLevel);
+			
+			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
+			
+			sem_wait(&semaphoreAirTemperature);
+				if (!airTemperatureBuffer.add(std::atoi(msg))) {/*buffer full*/ }
+			sem_post(&semaphoreAirTemperature);
+			
+			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
+			
+			sem_wait(&semaphoreAirHumidity);
+				if (!airHumidityBuffer.add(std::atoi(msg))) {/*buffer full*/ }
+			sem_post(&semaphoreAirHumidity);
+			
+			
 		}
 		pthread_exit(NULL);
 	}
@@ -668,37 +691,22 @@ int main(int count, char* args[])
 	signal(SIGHUP, signal_handler); /* catch hangup signal */
 	signal(SIGTERM, signal_handler); /* catch kill signal */
 
-	int fd;
-	
-	if ((fd = open("/var/log/system.log",	O_CREAT | O_WRONLY | O_APPEND, 0600)) < 0) {
-			perror("open");
-			exit(EXIT_FAILURE);
-	}
+	int msgprio = 1;
 
 	//MAIN LOOP
 	while (1)
 	{
 		sleep(5);
-		char buf[10];
 		int values[4];
 		taskReadSensors(values);
-		sprintf(buf, "%8d,%8d,%8d,%8d\n", values[0], values[1], values[2], values[3]);
-		write(fd, buf, 37);
+		std::string msg = std::to_string(values[0]) + std::to_string(values[1]) + std::to_string(values[2]) + std::to_string(values[3]);
 		
-		/*
-		msgq_id = mq_open(MSGQOBJ_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, NULL);
-		if (msgq_id == (mqd_t)-1) {
-			perror("In mq_open()");
-			exit(1);
-		}
-		// producing the message 
-		currtime = time(NULL);
-		snprintf(msgcontent, MAX_MSG_LEN, "Hello from process %u (at %s).", my_pid, ctime(&currtime));
 		// sending the message      --  mq_send() 
-		mq_send(msgq_id, msgcontent, strlen(msgcontent)+1, msgprio);
-		// closing the queue        -- mq_close() 
-		mq_close(msgq_id); 
-		*/
+		mq_send(msgq_id, std::to_string(values[0]).c_str(), strlen(std::to_string(values[0]).c_str())+1, msgprio);
+		mq_send(msgq_id, std::to_string(values[1]).c_str(), strlen(std::to_string(values[1]).c_str())+1, msgprio);
+		mq_send(msgq_id, std::to_string(values[2]).c_str(), strlen(std::to_string(values[2]).c_str())+1, msgprio);
+		mq_send(msgq_id, std::to_string(values[3]).c_str(), strlen(std::to_string(values[3]).c_str())+1, msgprio);
+
+		
 	}
-	close(fd);
 }
