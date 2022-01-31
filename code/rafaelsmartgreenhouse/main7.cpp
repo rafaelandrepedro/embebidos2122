@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <mqueue.h>   /* mq_* functions */
 #include "database.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 int main(int count, char* args[])
 {
@@ -30,10 +32,10 @@ int main(int count, char* args[])
       "WATERTEMPERATURE         FLOAT);");
 
 	int ID=1;
-	int AIRTEMPERATURE=20;
-	int AIRHUMIDITY=40;
-	int LIGHTLEVEL=50;
-	int WATERTEMPERATURE=20;
+	float AIRTEMPERATURE=22.4;
+	float AIRHUMIDITY=79.24;
+	float LIGHTLEVEL=46;
+	float WATERTEMPERATURE=37;
 		
 	
 	//MAIN LOOP
@@ -41,12 +43,12 @@ int main(int count, char* args[])
 	{
 		sleep(1);		
 		char str[1<<8];
-		sprintf(str, "INSERT INTO REPORT (ID,AIRTEMPERATURE,AIRHUMIDITY,LIGHTLEVEL,WATERTEMPERATURE) VALUES (%d, %d, %d, %d, %d); ", ID, AIRTEMPERATURE, AIRHUMIDITY, LIGHTLEVEL, WATERTEMPERATURE);
+		sprintf(str, "INSERT INTO REPORT (ID,AIRTEMPERATURE,AIRHUMIDITY,LIGHTLEVEL,WATERTEMPERATURE) VALUES (%d, %d, %d, %d, %d); ", (int)ID, (int)AIRTEMPERATURE, (int)AIRHUMIDITY, (int)LIGHTLEVEL, (int)WATERTEMPERATURE);
 		db.quarry(str);
-		ID++;
-		AIRTEMPERATURE++;
-		AIRHUMIDITY++;
-		LIGHTLEVEL--;
-		WATERTEMPERATURE--;
+		ID+=1;
+		AIRTEMPERATURE+=(rand()%10-5)*0.2;
+		AIRHUMIDITY+=(rand()%10-5)*0.2;
+		LIGHTLEVEL+=(rand()%10-5)*0.2;
+		WATERTEMPERATURE+=(rand()%10-5)*0.2;
 	}
 }
