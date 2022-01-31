@@ -16,14 +16,18 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+<<<<<<< HEAD
 #include <mqueue.h>   /* mq_* functions */
 
 /* name of the POSIX object referencing the queue */
 #define MSGQOBJ_NAME    "/queue0000"
 /* max length of a message (just for this process) */
 #define MAX_MSG_LEN     10000
+=======
+>>>>>>> parent of e2915751 (.)
 
-//#include "database.h"
+//#include <sys/semaphore.h>
+
 #include "airsensor.h"
 #include "LDRsensor.h"
 #include "WaterTempsensor.h"
@@ -181,7 +185,10 @@ void taskReadSensors(int values[4]) {
  * @return void
  */
 void* taskTakePhoto(void*) {
+<<<<<<< HEAD
 	//system("raspistill -o [nome]");
+=======
+>>>>>>> parent of e2915751 (.)
 	return NULL;
 }
 
@@ -235,9 +242,6 @@ void* taskSendData(void*) {
  */
 void* taskSendPhoto(void*) {
 	//photo struct
-
-
-	//insert in the database
 	return NULL;
 }
 
@@ -339,7 +343,7 @@ void* taskProcessLightLevel(void*) {
 		//convert
 
 
-		if(lightLevel<40){
+		if(result<40){
 			wPumpState=100;
 			tLightPower=100;
 		}
@@ -367,18 +371,15 @@ void* taskProcessLightLevel(void*) {
  *
  * @return void
  */
-void* taskActuateHeater(void*) {//GPIO24
+void* taskActuateHeater(void*) {
 	while(1){
 		pthread_mutex_lock(&mutexTargetHeaterPower);
 		int tHeaterPower=targetHeaterPower;
 		pthread_mutex_unlock(&mutexTargetHeaterPower);
 		//
-		
 		printf("\033[1;31m");
 		printf("Set heater to %d\n", tHeaterPower);
 		printf("\033[0m");
-		
-		
 		
 		for(int i=1;i<4;i++)
 			if(tHeaterPower)
@@ -416,13 +417,12 @@ void* taskActuateWindow(void*) {
  *
  * @return void
  */
-void* taskActuateLight(void*) {//GPIO23
+void* taskActuateLight(void*) {
 	while(1){
 		pthread_mutex_lock(&mutexTargetLightPower);
 		int tLightPower=targetLightPower;
 		pthread_mutex_unlock(&mutexTargetLightPower);
 		//
-		
 		printf("\033[1;31m");
 		printf("Set light to %d\n", tLightPower);
 		printf("\033[0m");
@@ -441,13 +441,12 @@ void* taskActuateLight(void*) {//GPIO23
  *
  * @return void
  */
-void* taskActuateWaterPump(void*) {//GPIO25
+void* taskActuateWaterPump(void*) {
 	while(1){
 		pthread_mutex_lock(&mutexWaterPumpState);
 		int wPumpState=waterPumpState;
 		pthread_mutex_unlock(&mutexWaterPumpState);
 		//
-		
 		printf("\033[1;31m");
 		printf("Set water pump to %d\n", wPumpState);
 		printf("\033[0m");
@@ -484,43 +483,6 @@ void* taskSetAirTemperature(void*) {
  */
 void* taskSetAirHumidity(void*) {
 	return NULL;
-}
-
-//슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬�
-
-void acquireSensorData(void){
-	int msgsz;
-			unsigned int sender;
-			char msg[MAX_MSG_LEN];
-			std::string str;
-			/* getting a message */
-			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
-			
-			sem_wait(&semaphoreWaterTemperature);
-				if (!waterTemperatureBuffer.add(std::atoi(msg))) {/*buffer full*/ }
-			sem_post(&semaphoreWaterTemperature);
-			
-			printf("\033[1;33m");
-			printf("W temp lida: %d\n", std::atoi(msg));
-			printf("\033[0m");
-			
-			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
-			
-			sem_wait(&semaphoreLightLevel);
-				if (!lightLevelBuffer.add(std::atoi(msg))) {/*buffer full*/ }
-			sem_post(&semaphoreLightLevel);
-			
-			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
-			
-			sem_wait(&semaphoreAirTemperature);
-				if (!airTemperatureBuffer.add(std::atoi(msg))) {/*buffer full*/ }
-			sem_post(&semaphoreAirTemperature);
-			
-			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
-			
-			sem_wait(&semaphoreAirHumidity);
-				if (!airHumidityBuffer.add(std::atoi(msg))) {/*buffer full*/ }
-			sem_post(&semaphoreAirHumidity);
 }
 
 //슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬슬�
@@ -572,6 +534,7 @@ int main(int count, char* args[])
 	{
 		// Error: initialization failed
 	}
+
 	
 	//setup the thread handlers
 	int thread_policy;
@@ -643,16 +606,8 @@ int main(int count, char* args[])
 	
 	
 	mqd_t msgq_id;	
-	
-	msgq_id = mq_open(MSGQOBJ_NAME, O_RDWR | O_CREAT, S_IRWXU | S_IRWXG, NULL);
-	if (msgq_id == (mqd_t)-1) {
-		perror("In mq_open()");
-		exit(1);
-	}
-	
-	mq_close(msgq_id);
-	
-	msgq_id = mq_open(MSGQOBJ_NAME, O_RDWR | O_CREAT, S_IRWXU | S_IRWXG, NULL);
+		
+	msgq_id = mq_open(MSGQOBJ_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, NULL);
 	if (msgq_id == (mqd_t)-1) {
 		perror("In mq_open()");
 		exit(1);
@@ -668,13 +623,45 @@ int main(int count, char* args[])
 	
 	if (pid > 0) {//success
 		printf("Deamon PID: %d\n", pid);
-		signal(SIGALRM, acquireSensorData); // set signal (alarm)
-		struct itimerval itv1;
-		itv1.it_interval.tv_sec = itv1.it_value.tv_sec = 5;
-		itv1.it_interval.tv_usec = itv1.it_value.tv_usec = 0;
-		setitimer(ITIMER_REAL, &itv1, NULL);
+		while(1){
+			sleep(5);
+			//int values[4];
+			//taskReadSensors(values);
+		    
+			int msgsz;
+			unsigned int sender;
+			char msg[MAX_MSG_LEN];
+			std::string str;
+			/* getting a message */
+			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
 			
-		while(1){	
+			sem_wait(&semaphoreWaterTemperature);
+				if (!waterTemperatureBuffer.add(std::atoi(msg))) {/*buffer full*/ }
+			sem_post(&semaphoreWaterTemperature);
+			
+			printf("\033[1;33m");
+			printf("W temp lida: %d\n", std::atoi(msg));
+			printf("\033[0m");
+			
+			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
+			
+			sem_wait(&semaphoreLightLevel);
+				if (!lightLevelBuffer.add(std::atoi(msg))) {/*buffer full*/ }
+			sem_post(&semaphoreLightLevel);
+			
+			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
+			
+			sem_wait(&semaphoreAirTemperature);
+				if (!airTemperatureBuffer.add(std::atoi(msg))) {/*buffer full*/ }
+			sem_post(&semaphoreAirTemperature);
+			
+			msgsz = mq_receive(msgq_id, msg, MAX_MSG_LEN+1, &sender);
+			
+			sem_wait(&semaphoreAirHumidity);
+				if (!airHumidityBuffer.add(std::atoi(msg))) {/*buffer full*/ }
+			sem_post(&semaphoreAirHumidity);
+			
+			
 		}
 		pthread_exit(NULL);
 	}
@@ -706,6 +693,7 @@ int main(int count, char* args[])
 		sleep(5);
 		int values[4];
 		taskReadSensors(values);
+<<<<<<< HEAD
 		std::string msg = std::to_string(values[0]) + std::to_string(values[1]) + std::to_string(values[2]) + std::to_string(values[3]);
 		
 		// sending the message      --  mq_send() 
@@ -715,5 +703,9 @@ int main(int count, char* args[])
 		mq_send(msgq_id, std::to_string(values[3]).c_str(), strlen(std::to_string(values[3]).c_str())+1, msgprio);
 
 		
+=======
+		sprintf(buf, "%8d,%8d,%8d,%8d\n", values[0], values[1], values[2], values[3]);
+		write(fd, buf, 37);
+>>>>>>> parent of e2915751 (.)
 	}
 }
