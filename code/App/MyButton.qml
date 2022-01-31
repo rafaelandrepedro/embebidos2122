@@ -2,15 +2,17 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import Wifi 1.0
 
+
 Item {
 
     property color textColor: "blue"
     property color buttonColor: "black"
-
+    property int width1: 120
+    property int height1: 120
     property string labelText: ""
 
-    width: 120
-    height: 120
+    width: width1
+    height: height1
 
     Wifi{
         id: mywifi
@@ -38,8 +40,20 @@ Item {
         anchors.fill: parent
 
         onClicked: {
-            if(labelText == "Send")
-                mywifi.func()
+            if(labelText == "Connect To\nGreenhouse")
+                mywifi.connectToServer();
+            if(labelText == "Real Time\nInfo")
+            {
+                loader.source = "InfoScreen.qml"
+            }
+            if(labelText == "Plantation")
+            {
+                loader.source = "PlantationScreen.qml"
+            }
+            if(labelText == "Back")
+            {
+                loader.source = "MainScreen.qml";
+            }
 
 
         }

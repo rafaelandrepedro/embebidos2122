@@ -43,15 +43,14 @@ bool WifiCOM::connectWifi()
 
 }
 
-void WifiCOM::sendApp(char msg[])
+void WifiCOM::sendApp(char msg[], int size)
 {
-    send(socket_app, msg, sizeof(msg),0);
+    send(socket_app, msg, size, 0);
 }
 
-void WifiCOM::recvApp(char msg[])
+void WifiCOM::recvApp(char cmd[], int size)
 {
-    recv(socket_app, &msg, sizeof(msg), 0);
-
+    recv(socket_app, cmd, size, 0);
 }
 
 void WifiCOM::close()

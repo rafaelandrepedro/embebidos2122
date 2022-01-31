@@ -2,19 +2,25 @@
 #define WIFI_H
 
 #include <QObject>
+
 #include <stdio.h>
-#include <winsock2.h>
+#include <sys/socket.h>
 #include <sys/types.h>
-#include <pthread.h>
+#include <resolv.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <sys/time.h>
+
+#include <ctype.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/time.h>
 
-#define PORTNUM 5000
+
+#define PORTNUM 5002
 #define CONNECTION_NUM 2
+const char server_ip[] = "192.168.1.98";
 
 void panic(char *msg);
 #define panic(m)	{perror(m); abort();}
@@ -32,11 +38,14 @@ signals:
 
 public slots:
     void init();
+    void connectToServer();
+    void sendToServer(QString);
+    void receiveFromServer();
 
 private:
-    qint16 listen_sd;
-    struct sockaddr_in addr;
+    bool connected;
 
 };
 
 #endif // WIFI_H
+

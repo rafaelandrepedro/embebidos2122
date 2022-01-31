@@ -1,25 +1,29 @@
 #include <stdio.h>
 #include "wifi.h"
 
+
 int main()
 {
     WifiCOM a;
 
 
-
-    char aux[128] = "";
-    char sendmsg[128] = "aaaaaa";
+    char msg[128] = "";
     a.init();
-    a.connectWifi();
-    a.recvApp(aux);
+    if(a.connectWifi())
+       printf("CONNECTED!!\n");
+    else
+       printf("ERROR\n");
+
+    //a.recvApp(msg, sizeof(msg));
    // a.close();
+    a.recvApp(msg, sizeof(msg));
 
 
 
 
 
-    printf("%s\n",aux);
-    while(1)
-        ;
+    printf("%s\n",msg);
+    //while(1)
+      //  ;
     return 0;
 }

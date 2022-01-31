@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <netdb.h>
 #include <stdlib.h>
+#include <string>
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
@@ -15,7 +16,7 @@
 #include <signal.h>
 
 
-#define PORTNUM 5000
+#define PORTNUM 5002
 #define CONNECTION_NUM 2
 
 void panic(char *msg);
@@ -34,8 +35,8 @@ class WifiCOM{
         void init();
         void close();
         bool connectWifi();
-        void sendApp(char*);
-        void recvApp(char*);
+        void sendApp(char[], int size);
+        void recvApp(char[], int size);
 };
 
 #endif // WIFI_H

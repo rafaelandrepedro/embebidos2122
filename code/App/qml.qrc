@@ -2,5 +2,10 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>MyButton.qml</file>
+        <file>SensorsLabel.qml</file>
+        <file>ActuatorsLabel.qml</file>
+        <file>InfoScreen.qml</file>
+        <file>MainScreen.qml</file>
+        <file>PlantationScreen.qml</file>
     </qresource>
 </RCC>
