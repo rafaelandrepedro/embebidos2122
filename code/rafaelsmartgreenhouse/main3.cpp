@@ -9,8 +9,6 @@ int main()
     std::cout << "Hello World!" << std::endl;
     while(1){
 	stepmotor.rotate(512);
-	
-	stepmotor.rotate(-512);
 	std::cout << "-" << std::endl;
     }
     return 0;
