@@ -72,6 +72,22 @@ void setPrio(unsigned int priority, pthread_attr_t* thread_attr, struct sched_pa
 	pthread_attr_setschedparam (thread_attr, thread_param);
 }
 
+std::string getWord(std::string str, int pos)
+{
+    stringstream s(str);
+    string word;
+    for(int i=0;i<pos;i++){s >> word;}
+    return word;
+}
+
+int getNumber(std::string str, int pos)
+{
+    int number;
+    stringstream s(getWord(str, pos));
+    s >> number;
+    return number;
+}
+
 /*Semaphores*/
 sem_t semaphoreAirTemperature;
 sem_t semaphoreAirHumidity;
@@ -119,6 +135,9 @@ mqd_t msgq_id;
 
 /*database*/
 Database db("database.db");
+
+/*wifi*/
+WifiCOM a;
 
 //½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
 /**
@@ -470,7 +489,53 @@ void* taskActuateWaterPump(void*) {//GPIO25
  *
  * @return void
  */
-void* taskCheckWifiDataReception(void*) {return NULL;}
+void* taskCheckWifiDataReception(void*) {
+	char msg[128] = "";
+	while(1){
+		a.recvApp(msg, sizeof(msg));
+		std::string command(msg);
+		if (getWord(command,1).compare("plant") == 0){
+			//#tag falta adicionar plantas
+		}
+		if (getWord(command,1).compare("turn") == 0){
+			//#tag falta adicionar variável on/off
+		}
+		if (getWord(command,1).compare("dataRequest") == 0){
+			int value;
+
+			sem_wait(&semaphoreWaterTemperature);
+				if (!airTemperatureBuffer.check(&value)) {/*buffer full*/ }
+			sem_post(&semaphoreWaterTemperature);
+
+			sprintf(msg, "airTemp %d", value);
+			sendApp(msg, sizeof(msg));
+			
+			sem_wait(&semaphoreLightLevel);
+				if (!airHumidityBuffer.check(&value))) {/*buffer full*/ }
+			sem_post(&semaphoreLightLevel);
+
+			sprintf(msg, "airHum %d", value);
+			sendApp(msg, sizeof(msg));
+			
+			sem_wait(&semaphoreAirTemperature);
+				if (!waterTemperatureBuffer.check(&value))) {/*buffer full*/ }
+			sem_post(&semaphoreAirTemperature);
+
+			sprintf(msg, "waterTemp %d", value);
+			sendApp(msg, sizeof(msg));
+			
+			sem_wait(&semaphoreAirHumidity);
+				if (!lightLevelBuffer.check(&value))) {/*buffer full*/ }
+			sem_post(&semaphoreAirHumidity);
+
+			sprintf(msg, "lightLevel %d", value);
+			sendApp(msg, sizeof(msg));
+
+			//#tag falta adicionar atuadores
+		}
+	}
+	return NULL;
+}
 /**
  * @brief sets the air temperature reference to a value given from the mobile app
  *
@@ -533,6 +598,12 @@ int main(int count, char* args[])
 		
 	//set text color to normal
 	printf("\033[0;37m");
+
+	a.init();
+	if(a.connectWifi())
+		printf("CONNECTED!!\n");
+	else
+		printf("ERROR\n");
 	
 	
 	//init the system classes
