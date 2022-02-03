@@ -3,32 +3,44 @@
 
 void tomato(){
 	int temp=15, hum=85;
-	printf("Temp= %d Hum= %d\n", temp, hum);	
+	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
 }
 
 void lettuce(){
 	int temp=16, hum=60;
 	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
 }
 
 void spinach(){
 	int temp=13, hum=92;
 	printf("Temp= %d Hum= %d\n", temp, hum);	
+	setAirTemperature(temp);
+	setAirHumidity(hum);
 }
 
 void cucumber(){
 	int temp=27, hum=90;
 	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
 }
 
 void celery(){
 	int temp=18, hum=90;
 	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
 }
 
 void pepper(){
 	int temp=24, hum=92;
-	printf("Temp= %d Hum= %d\n", temp, hum);	
+	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
 }
 
 void* plant(void* arg){

@@ -397,7 +397,8 @@ void* taskCheckWifiDataReception(void*) {
  *
  * @return void
  */
-void taskSetAirTemperature(int) {
+void setAirTemperature(int value) {
+	refTemperature = value;
 	return NULL;
 }
 /**
@@ -405,7 +406,8 @@ void taskSetAirTemperature(int) {
  *
  * @return void
  */
-void taskSetAirHumidity(int) {
+void setAirHumidity(int value) {
+	refHumidity = value;
 	return NULL;
 }
 

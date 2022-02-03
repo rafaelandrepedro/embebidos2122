@@ -102,4 +102,7 @@ Database db("database.db");
 /*wifi*/
 WifiCOM a;
 
+void setAirTemperature(int);
+void setAirHumidity(int);
+
 #endif
