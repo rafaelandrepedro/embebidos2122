@@ -1,3 +1,4 @@
+#include "main.h"
 #include "appCommunication.h"
 
 void tomato(){
@@ -67,21 +68,60 @@ void* turn(void* command){
 
 void* dataRequest(void* command){
 	printf("Enviar os dados\n");
+
+	int value;
 	char msg[128];
-	strcpy(msg, "airTemp 20");
+
+	sem_wait(&semaphoreAirTemperature);
+	if (!airTemperatureBuffer.check(value)) {/*buffer full*/ }
+	sem_post(&semaphoreAirTemperature);
+
+	sprintf(msg, "airTemp %d", value);
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "airHum 30");
+
+	sem_wait(&semaphoreAirHumidity);
+	if (!airHumidityBuffer.check(value)) {/*buffer full*/ }
+	sem_post(&semaphoreAirHumidity);
+
+	sprintf(msg, "airHum %d", value);
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "waterTemp 40");
+
+	sem_wait(&semaphoreWaterTemperature);
+	if (!waterTemperatureBuffer.check(value)) {/*buffer full*/ }
+	sem_post(&semaphoreWaterTemperature);
+
+	sprintf(msg, "waterTemp %d", value);
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "lightLevel 50");
+
+	sem_wait(&semaphoreLightLevel);
+	if (!lightLevelBuffer.check(value)) {/*buffer full*/ }
+	sem_post(&semaphoreLightLevel);
+
+	sprintf(msg, "lightLevel %d", value);
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "heater on");
+
+	if (heater.state())
+		strcpy(msg, "heater on");
+	else
+		strcpy(msg, "heater off");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "waterPump off");
+
+	if (waterPump.state())
+		strcpy(msg, "waterPump on");
+	else
+		strcpy(msg, "waterPump off");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "light on");
+
+	if (light.state())
+		strcpy(msg, "light on");
+	else
+		strcpy(msg, "light off");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "window off");
+
+	if (stepMotor.state())
+		strcpy(msg, "window on");
+	else
+		strcpy(msg, "window off");
 	a.sendApp(msg, sizeof(msg));
+
 }

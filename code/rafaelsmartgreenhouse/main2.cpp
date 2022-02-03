@@ -1,46 +1,4 @@
-#include <cmath>
-#include <fcntl.h>
-#include <netdb.h>
-#include <pthread.h>
-#include <resolv.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <stdio.h> 
-#include <stdlib.h>
-#include <string.h>
-#include <sstream>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/syslog.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
-#include <mqueue.h>   /* mq_* functions */
-
-/* name of the POSIX object referencing the queue */
-#define MSGQOBJ_NAME    "/queue0000"
-/* max length of a message (just for this process) */
-#define MAX_MSG_LEN     10000
-
-#include "database.h"
-#include "airsensor.h"
-#include "LDRsensor.h"
-#include "WaterTempsensor.h"
-
-
-#include "buffer.h"
-
-#include "heater.h"
-#include "stepmotor.h"
-#include "light.h"
-#include "waterpump.h"
-
-
-
-#ifndef NULL
-#define NULL 0
-#endif
+#include "main2.h"
 
 /**
  * @brief initialization of the thread priority attributes
@@ -72,74 +30,8 @@ void setPrio(unsigned int priority, pthread_attr_t* thread_attr, struct sched_pa
 	pthread_attr_setschedparam (thread_attr, thread_param);
 }
 
-std::string getWord(std::string str, int pos)
-{
-    stringstream s(str);
-    string word;
-    for(int i=0;i<pos;i++){s >> word;}
-    return word;
-}
 
-int getNumber(std::string str, int pos)
-{
-    int number;
-    stringstream s(getWord(str, pos));
-    s >> number;
-    return number;
-}
-
-/*Semaphores*/
-sem_t semaphoreAirTemperature;
-sem_t semaphoreAirHumidity;
-sem_t semaphoreWaterTemperature;
-sem_t semaphoreLightLevel;
-
-/*buffers*/
-Buffer<int> airTemperatureBuffer;
-Buffer<int> airHumidityBuffer;
-Buffer<int> waterTemperatureBuffer;
-Buffer<int> lightLevelBuffer;
-//photoBuffer
-//processedPhotoBuffer
-
-/*Mutexes*/
-pthread_mutex_t mutexTargetMotorPosition;
-pthread_mutex_t mutexTargetHeaterPower;
-pthread_mutex_t mutexTargetLightPower;
-pthread_mutex_t mutexWaterPumpState;
-
-/*Control variables*/
-int targetMotorPosition;
-int targetHeaterPower;
-int targetLightPower;
-int waterPumpState;
-
-int refTemperature;
-int refHumidity;
-
-/*Critical error routine*/
-void panic(char* msg);
-#define panic(m)		{perror(m); abort();}
-
-/*classes*/
-LDRsensor ldrsensor;
-WaterTempsensor watertempsensor;
-Airsensor airsensor;
-WaterPump waterPump;
-StepMotor stepMotor;
-Light light;
-Heater heater;
-
-/*message queue*/
-mqd_t msgq_id;
-
-/*database*/
-Database db("database.db");
-
-/*wifi*/
-WifiCOM a;
-
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 /**
  * @brief signal handler to handle the hangup and terminate signals
  *
@@ -158,7 +50,7 @@ void signal_handler(int sig) {
 	}
 }
 
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 /**
  * @brief reads the sensors and stores the values in the buffers
  *
@@ -199,18 +91,21 @@ void taskReadSensors(int values[4]) {
 	return;
 }
 
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 /**
- * @brief takes a photo and stores in the rasp
+ * @brief takes a photo and stores in the Raspberry Pi
  *
  * @return void
  */
 void* taskTakePhoto(void*) {
-	//system("raspistill -o [nome]");
+	while (1) {
+		system("raspistill -o [nome]");
+		sleep(86400);
+	}
 	return NULL;
 }
 
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 /**
  * @brief stores the sensor values into the database
  *
@@ -262,7 +157,7 @@ void* taskSendPhoto(void*) {
 	return NULL;
 }
 
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 
 /**
  * @brief converts the air temperature from the buffer and compares with the reference temperature, then sends a signal to the actuation variable of the heater
@@ -381,7 +276,7 @@ void* taskProcessLightLevel(void*) {
 	return NULL;
 }
 
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 
 /**
  * @brief checks the heater actuation variable and sets the heater to the target temperature
@@ -482,7 +377,7 @@ void* taskActuateWaterPump(void*) {//GPIO25
 	return NULL;
 }
 
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 
 /**
  * @brief searches for a client and connects to it if found
@@ -490,50 +385,24 @@ void* taskActuateWaterPump(void*) {//GPIO25
  * @return void
  */
 void* taskCheckWifiDataReception(void*) {
+	Parser parser;
+    
+	parser.add(&plant,"plant");
+	parser.add(&turn,"turn");
+	parser.add(&dataRequest,"dataRequest");
+
 	char msg[128] = "";
+	a.init();
+	if(a.connectWifi())
+		printf("CONNECTED!!\n");
+	else
+		printf("ERROR\n");
+
 	while(1){
-		a.recvApp(msg, sizeof(msg));
-		std::string command(msg);
-		if (getWord(command,1).compare("plant") == 0){
-			//#tag falta adicionar plantas
-		}
-		if (getWord(command,1).compare("turn") == 0){
-			//#tag falta adicionar variável on/off
-		}
-		if (getWord(command,1).compare("dataRequest") == 0){
-			int value;
-
-			sem_wait(&semaphoreWaterTemperature);
-				if (!airTemperatureBuffer.check(&value)) {/*buffer full*/ }
-			sem_post(&semaphoreWaterTemperature);
-
-			sprintf(msg, "airTemp %d", value);
-			sendApp(msg, sizeof(msg));
-			
-			sem_wait(&semaphoreLightLevel);
-				if (!airHumidityBuffer.check(&value))) {/*buffer full*/ }
-			sem_post(&semaphoreLightLevel);
-
-			sprintf(msg, "airHum %d", value);
-			sendApp(msg, sizeof(msg));
-			
-			sem_wait(&semaphoreAirTemperature);
-				if (!waterTemperatureBuffer.check(&value))) {/*buffer full*/ }
-			sem_post(&semaphoreAirTemperature);
-
-			sprintf(msg, "waterTemp %d", value);
-			sendApp(msg, sizeof(msg));
-			
-			sem_wait(&semaphoreAirHumidity);
-				if (!lightLevelBuffer.check(&value))) {/*buffer full*/ }
-			sem_post(&semaphoreAirHumidity);
-
-			sprintf(msg, "lightLevel %d", value);
-			sendApp(msg, sizeof(msg));
-
-			//#tag falta adicionar atuadores
-		}
-	}
+    		a.recvApp(msg, sizeof(msg));
+    		printf("App > %s\n", msg);
+    		parser.search(std::string(msg));
+    	}
 	return NULL;
 }
 /**
@@ -541,7 +410,7 @@ void* taskCheckWifiDataReception(void*) {
  *
  * @return void
  */
-void* taskSetAirTemperature(void*) {
+void taskSetAirTemperature(int) {
 	return NULL;
 }
 /**
@@ -549,11 +418,11 @@ void* taskSetAirTemperature(void*) {
  *
  * @return void
  */
-void* taskSetAirHumidity(void*) {
+void taskSetAirHumidity(int) {
 	return NULL;
 }
 
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 
 void acquireSensorData(int){
 	int msgsz;
@@ -590,7 +459,7 @@ void acquireSensorData(int){
 			sem_post(&semaphoreAirHumidity);
 }
 
-//½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½
+//?????????????????????????????????????????????????????????????????????????????????????????????
 int main(int count, char* args[])
 {
 
@@ -655,12 +524,12 @@ int main(int count, char* args[])
 	
 	
 	//threads: photo
-	pthread_t threadTakePhoto, threadProcessPhoto;
+	pthread_t threadTakePhoto;
 	setPrio(7, &thread_attr, &thread_param);
 	pthread_create(&threadTakePhoto, 0, taskTakePhoto, NULL);
 	pthread_detach(threadTakePhoto);
 
-	//threads: send to mobile app
+	//threads: send to database
 	pthread_t threadSendData, threadSendPhoto;
 	setPrio(4, &thread_attr, &thread_param);
 	pthread_create(&threadSendData, 0, taskSendData, NULL);
@@ -701,15 +570,6 @@ int main(int count, char* args[])
 	setPrio(6, &thread_attr, &thread_param);
 	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, NULL);
 	pthread_detach(threadCheckWifiDataReception);
-	
-	//threads: set reference parameters
-	pthread_t threadSetAirTemperature, threadSetAirHumidity;
-	setPrio(2, &thread_attr, &thread_param);
-	pthread_create(&threadSetAirTemperature, 0, taskSetAirTemperature, NULL);
-	setPrio(2, &thread_attr, &thread_param);
-	pthread_create(&threadSetAirHumidity, 0, taskSetAirHumidity, NULL);
-	pthread_detach(threadSetAirTemperature);
-	pthread_detach(threadSetAirHumidity);
 	
 	
 		
