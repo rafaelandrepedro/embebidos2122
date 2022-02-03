@@ -31,6 +31,10 @@
 
 #include "buffer.h"
 
+#include "parser.h"
+
+#include "appCommunication.h"
+
 #include "heater.h"
 #include "stepmotor.h"
 #include "light.h"
@@ -470,13 +474,33 @@ void* taskActuateWaterPump(void*) {//GPIO25
  *
  * @return void
  */
-void* taskCheckWifiDataReception(void*) {return NULL;}
+void* taskCheckWifiDataReception(void*) {
+	Parser parser;
+    
+	parser.add(&plant,"plant");
+	parser.add(&turn,"turn");
+	parser.add(&dataRequest,"dataRequest");
+
+	char msg[128] = "";
+	a.init();
+	if(a.connectWifi())
+		printf("CONNECTED!!\n");
+	else
+		printf("ERROR\n");
+
+	while(1){
+    		a.recvApp(msg, sizeof(msg));
+    		printf("App > %s\n", msg);
+    		parser.search(std::string(msg));
+    	}
+	return NULL;
+}
 /**
  * @brief sets the air temperature reference to a value given from the mobile app
  *
  * @return void
  */
-void* taskSetAirTemperature(void*) {
+void taskSetAirTemperature(int) {
 	return NULL;
 }
 /**
@@ -484,7 +508,7 @@ void* taskSetAirTemperature(void*) {
  *
  * @return void
  */
-void* taskSetAirHumidity(void*) {
+void taskSetAirHumidity(int) {
 	return NULL;
 }
 
@@ -630,15 +654,6 @@ int main(int count, char* args[])
 	setPrio(6, &thread_attr, &thread_param);
 	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, NULL);
 	pthread_detach(threadCheckWifiDataReception);
-	
-	//threads: set reference parameters
-	pthread_t threadSetAirTemperature, threadSetAirHumidity;
-	setPrio(2, &thread_attr, &thread_param);
-	pthread_create(&threadSetAirTemperature, 0, taskSetAirTemperature, NULL);
-	setPrio(2, &thread_attr, &thread_param);
-	pthread_create(&threadSetAirHumidity, 0, taskSetAirHumidity, NULL);
-	pthread_detach(threadSetAirTemperature);
-	pthread_detach(threadSetAirHumidity);
 	
 	
 		
