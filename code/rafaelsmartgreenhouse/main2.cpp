@@ -163,10 +163,10 @@ void* taskProcessAirTemperature(void*) {
 		float Temp_Code = (float)airTemperature;
 		result = ((float)175.72 * (float)Temp_Code / (float)256) - (float)46.85;
 	
-		if((int)result<=refTemperature)
+		if((int)result<=refTemperature-10)
 			tHeaterPower=100;
-		else if((int)result>refTemperature && (int)result<refTemperature+10)
-			tHeaterPower=(refTemperature+10-(int)result)*10;
+		else if((int)result>refTemperature-10 && (int)result<refTemperature)
+			tHeaterPower=(refTemperature-(int)result)*10;
 		else
 			tHeaterPower=0;
 			
@@ -200,10 +200,10 @@ void* taskProcessAirHumidity(void*) {
 		float RH_Code = (float)airHumidity;
 		result = ((float)125 * (float)RH_Code / (float)256) + (float)6;
 	
-		if((int)result<=refHumidity)
+		if((int)result<=refHumidity-10)
 			tMotorPosition=256;
-		else if((int)result>refHumidity && (int)result<refHumidity+10)
-			tMotorPosition=(refHumidity+10-(int)result)*25.6;
+		else if((int)result>refHumidity-10 && (int)result<refHumidity)
+			tMotorPosition=(refHumidity-(int)result)*25.6;
 		else
 			tMotorPosition=0;
 			
