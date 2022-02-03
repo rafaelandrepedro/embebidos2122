@@ -16,7 +16,7 @@
 #include <signal.h>
 
 
-#define PORTNUM 5002
+#define PORTNUM 5003
 #define CONNECTION_NUM 2
 
 void panic(char *msg);
