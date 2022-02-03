@@ -255,9 +255,9 @@ void* taskProcessLightLevel(void*) {
 			targetLightPower = tLightPower;
 		pthread_mutex_unlock(&mutexTargetLightPower);
 	
-		pthread_mutex_lock(&mutexTargetLightPower);
+		pthread_mutex_lock(&mutexWaterPumpState);
 			waterPumpState = wPumpState;
-		pthread_mutex_unlock(&mutexTargetLightPower);
+		pthread_mutex_unlock(&mutexWaterPumpState);
 		sleep(4);
 	}
 	return NULL;
