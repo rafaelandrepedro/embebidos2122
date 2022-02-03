@@ -525,7 +525,7 @@ int main(int count, char* args[])
 	
 	//threads: photo
 	pthread_t threadTakePhoto;
-	setPrio(7, &thread_attr, &thread_param);
+	setPrio(1, &thread_attr, &thread_param);
 	pthread_create(&threadTakePhoto, 0, taskTakePhoto, NULL);
 	pthread_detach(threadTakePhoto);
 
@@ -533,18 +533,18 @@ int main(int count, char* args[])
 	pthread_t threadSendData, threadSendPhoto;
 	setPrio(4, &thread_attr, &thread_param);
 	pthread_create(&threadSendData, 0, taskSendData, NULL);
-	setPrio(5, &thread_attr, &thread_param);
+	setPrio(3, &thread_attr, &thread_param);
 	pthread_create(&threadSendPhoto, 0, taskSendPhoto, NULL);
 	pthread_detach(threadSendData);
 	pthread_detach(threadSendPhoto);
 	
 	//threads: process raw values and send actuation controls
 	pthread_t threadProcessAirTemperature, threadProcessAirHumidity, threadProcessLightLevel;
-	setPrio(3, &thread_attr, &thread_param);
+	setPrio(5, &thread_attr, &thread_param);
 	pthread_create(&threadProcessAirTemperature, 0, taskProcessAirTemperature, NULL);
-	setPrio(3, &thread_attr, &thread_param);
+	setPrio(5, &thread_attr, &thread_param);
 	pthread_create(&threadProcessAirHumidity, 0, taskProcessAirHumidity, NULL);
-	setPrio(3, &thread_attr, &thread_param);	
+	setPrio(5, &thread_attr, &thread_param);	
 	pthread_create(&threadProcessLightLevel, 0, taskProcessLightLevel, NULL);
 	pthread_detach(threadProcessAirTemperature);
 	pthread_detach(threadProcessAirHumidity);
@@ -552,13 +552,13 @@ int main(int count, char* args[])
 	
 	//threads: control the actuators
 	pthread_t threadActuateHeater, threadActuateWindow, threadActuateLight, threadActuateWaterPump;
-	setPrio(1, &thread_attr, &thread_param);
+	setPrio(7, &thread_attr, &thread_param);
 	pthread_create(&threadActuateHeater, 0, taskActuateHeater, NULL);
-	setPrio(1, &thread_attr, &thread_param);
+	setPrio(7, &thread_attr, &thread_param);
 	pthread_create(&threadActuateWindow, 0, taskActuateWindow, NULL);
-	setPrio(1, &thread_attr, &thread_param);
+	setPrio(7, &thread_attr, &thread_param);
 	pthread_create(&threadActuateLight, 0, taskActuateLight, NULL);
-	setPrio(1, &thread_attr, &thread_param);
+	setPrio(7, &thread_attr, &thread_param);
 	pthread_create(&threadActuateWaterPump, 0, taskActuateWaterPump, NULL);
 	pthread_detach(threadActuateHeater);
 	pthread_detach(threadActuateWindow);
@@ -567,7 +567,7 @@ int main(int count, char* args[])
 	
 	//threads: connect to mobile app
 	pthread_t threadCheckWifiDataReception;
-	setPrio(6, &thread_attr, &thread_param);
+	setPrio(2, &thread_attr, &thread_param);
 	pthread_create(&threadCheckWifiDataReception, 0, taskCheckWifiDataReception, NULL);
 	pthread_detach(threadCheckWifiDataReception);
 	
