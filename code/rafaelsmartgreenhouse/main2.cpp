@@ -144,19 +144,6 @@ void* taskSendData(void*) {
 	return NULL;
 }
 
-/**
- * @brief sends the photo to the mobile app
- *
- * @return void
- */
-void* taskSendPhoto(void*) {
-	//photo struct
-
-
-	//insert in the database
-	return NULL;
-}
-
 //?????????????????????????????????????????????????????????????????????????????????????????????
 
 /**
@@ -530,13 +517,10 @@ int main(int count, char* args[])
 	pthread_detach(threadTakePhoto);
 
 	//threads: send to database
-	pthread_t threadSendData, threadSendPhoto;
+	pthread_t threadSendData;
 	setPrio(4, &thread_attr, &thread_param);
 	pthread_create(&threadSendData, 0, taskSendData, NULL);
-	setPrio(3, &thread_attr, &thread_param);
-	pthread_create(&threadSendPhoto, 0, taskSendPhoto, NULL);
 	pthread_detach(threadSendData);
-	pthread_detach(threadSendPhoto);
 	
 	//threads: process raw values and send actuation controls
 	pthread_t threadProcessAirTemperature, threadProcessAirHumidity, threadProcessLightLevel;
