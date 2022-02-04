@@ -1,5 +1,5 @@
 #ifndef PARSER_H
-#define PARSER_h
+#define PARSER_H
 
 #include <string.h>
 #include <sstream>

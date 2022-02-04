@@ -1,4 +1,4 @@
-#include "main.h"
+
 #include "appCommunication.h"
 
 void tomato(){
@@ -85,28 +85,28 @@ void* dataRequest(void* command){
 	char msg[128];
 
 	sem_wait(&semaphoreAirTemperature);
-	if (!airTemperatureBuffer.check(value)) {/*buffer full*/ }
+	if (!airTemperatureBuffer.check(&value)) {/*buffer full*/ }
 	sem_post(&semaphoreAirTemperature);
 
 	sprintf(msg, "airTemp %d", value);
 	a.sendApp(msg, sizeof(msg));
 
 	sem_wait(&semaphoreAirHumidity);
-	if (!airHumidityBuffer.check(value)) {/*buffer full*/ }
+	if (!airHumidityBuffer.check(&value)) {/*buffer full*/ }
 	sem_post(&semaphoreAirHumidity);
 
 	sprintf(msg, "airHum %d", value);
 	a.sendApp(msg, sizeof(msg));
 
 	sem_wait(&semaphoreWaterTemperature);
-	if (!waterTemperatureBuffer.check(value)) {/*buffer full*/ }
+	if (!waterTemperatureBuffer.check(&value)) {/*buffer full*/ }
 	sem_post(&semaphoreWaterTemperature);
 
 	sprintf(msg, "waterTemp %d", value);
 	a.sendApp(msg, sizeof(msg));
 
 	sem_wait(&semaphoreLightLevel);
-	if (!lightLevelBuffer.check(value)) {/*buffer full*/ }
+	if (!lightLevelBuffer.check(&value)) {/*buffer full*/ }
 	sem_post(&semaphoreLightLevel);
 
 	sprintf(msg, "lightLevel %d", value);

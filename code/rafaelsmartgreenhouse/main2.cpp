@@ -1,5 +1,108 @@
 #include "main2.h"
 
+#include <cmath>
+#include <fcntl.h>
+#include <netdb.h>
+#include <pthread.h>
+#include <resolv.h>
+#include <semaphore.h>
+#include <signal.h>
+#include <stdio.h> 
+#include <stdlib.h>
+#include <string.h>
+#include <sstream>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/syslog.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+#include <mqueue.h>   /* mq_* functions */
+
+/* name of the POSIX object referencing the queue */
+#define MSGQOBJ_NAME    "/queue0000"
+/* max length of a message (just for this process) */
+#define MAX_MSG_LEN     10000
+
+#include "database.h"
+#include "airsensor.h"
+#include "LDRsensor.h"
+#include "WaterTempsensor.h"
+
+
+#include "buffer.h"
+
+
+#include "appCommunication.h"
+
+#include "heater.h"
+#include "stepmotor.h"
+#include "light.h"
+#include "waterpump.h"
+
+
+
+#ifndef NULL
+#define NULL 0
+#endif
+
+
+/*Semaphores*/
+sem_t semaphoreAirTemperature;
+sem_t semaphoreAirHumidity;
+sem_t semaphoreWaterTemperature;
+sem_t semaphoreLightLevel;
+
+
+/*buffers*/
+Buffer<int> airTemperatureBuffer;
+Buffer<int> airHumidityBuffer;
+Buffer<int> waterTemperatureBuffer;
+Buffer<int> lightLevelBuffer;
+//photoBuffer
+//processedPhotoBuffer
+
+/*Mutexes*/
+pthread_mutex_t mutexTargetMotorPosition;
+pthread_mutex_t mutexTargetHeaterPower;
+pthread_mutex_t mutexTargetLightPower;
+pthread_mutex_t mutexWaterPumpState;
+
+/*Control variables*/
+int targetMotorPosition;
+int targetHeaterPower;
+int targetLightPower;
+int waterPumpState;
+
+int refTemperature;
+int refHumidity;
+
+/*Critical error routine*/
+void panic(char* msg);
+#define panic(m)		{perror(m); abort();}
+
+/*classes*/
+LDRsensor ldrsensor;
+WaterTempsensor watertempsensor;
+Airsensor airsensor;
+WaterPump waterPump;
+StepMotor stepMotor;
+Light light;
+Heater heater;
+
+/*message queue*/
+mqd_t msgq_id;
+
+/*database*/
+Database db("database.db");
+
+/*wifi*/
+WifiCOM a;
+
+void setAirTemperature(int);
+void setAirHumidity(int);
+
 /**
  * @brief initialization of the thread priority attributes
  *
@@ -51,6 +154,151 @@ void signal_handler(int sig) {
 }
 
 //?????????????????????????????????????????????????????????????????????????????????????????????
+
+void tomato(){
+	int temp=15, hum=85;
+	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
+}
+
+void lettuce(){
+	int temp=16, hum=60;
+	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
+}
+
+void spinach(){
+	int temp=13, hum=92;
+	printf("Temp= %d Hum= %d\n", temp, hum);	
+	setAirTemperature(temp);
+	setAirHumidity(hum);
+}
+
+void cucumber(){
+	int temp=27, hum=90;
+	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
+}
+
+void celery(){
+	int temp=18, hum=90;
+	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
+}
+
+void pepper(){
+	int temp=24, hum=92;
+	printf("Temp= %d Hum= %d\n", temp, hum);
+	setAirTemperature(temp);
+	setAirHumidity(hum);
+}
+
+void* plant(void* arg){
+	std::string command=*(std::string*)arg;
+	if(getWord(command,2).compare("Tomato")==0){
+		tomato();
+	}
+	
+	if(getWord(command,2).compare("Lettuce")==0){
+		lettuce();
+	}
+	
+	if(getWord(command,2).compare("Spinach")==0){
+		spinach();
+	}
+	
+	if(getWord(command,2).compare("Cucumber")==0){
+		cucumber();
+	}
+	
+	if(getWord(command,2).compare("Celery")==0){
+		celery();
+	}
+	
+	if(getWord(command,2).compare("Pepper")==0){
+		pepper();
+	}
+}
+
+void* turn(void* command){
+	static bool state=true;
+	if(state=!state)
+		printf("Desligar\n");
+	else
+		printf("Ligar\n");	
+}
+
+void* dataRequest(void* command){
+	printf("Enviar os dados\n");
+
+	int value;
+	char msg[128];
+
+	sem_wait(&semaphoreAirTemperature);
+	if (!airTemperatureBuffer.check(&value)) {/*buffer full*/ }
+	sem_post(&semaphoreAirTemperature);
+	
+	float Temp_Code = (float)value;
+		value = ((float)175.72 * (float)Temp_Code / (float)256) - (float)46.85;
+
+	sprintf(msg, "%d", value);
+	a.sendApp(msg, sizeof(msg));
+
+	sem_wait(&semaphoreAirHumidity);
+	if (!airHumidityBuffer.check(&value)) {/*buffer full*/ }
+	sem_post(&semaphoreAirHumidity);
+	
+	float RH_Code = (float)value;
+		value = ((float)125 * (float)RH_Code / (float)256) + (float)6;
+
+	sprintf(msg, "%d", value);
+	a.sendApp(msg, sizeof(msg));
+
+	sem_wait(&semaphoreWaterTemperature);
+	if (!waterTemperatureBuffer.check(&value)) {/*buffer full*/ }
+	sem_post(&semaphoreWaterTemperature);
+
+	sprintf(msg, "%d", value);
+	a.sendApp(msg, sizeof(msg));
+
+	sem_wait(&semaphoreLightLevel);
+	if (!lightLevelBuffer.check(&value)) {/*buffer full*/ }
+	sem_post(&semaphoreLightLevel);
+
+	sprintf(msg, "%d", value);
+	a.sendApp(msg, sizeof(msg));
+
+	if (heater.state())
+		strcpy(msg, "On");
+	else
+		strcpy(msg, "Off");
+	a.sendApp(msg, sizeof(msg));
+
+	if (waterPump.state())
+		strcpy(msg, "On");
+	else
+		strcpy(msg, "Off");
+	a.sendApp(msg, sizeof(msg));
+
+	if (light.state())
+		strcpy(msg, "On");
+	else
+		strcpy(msg, "Off");
+	a.sendApp(msg, sizeof(msg));
+
+	if (stepMotor.state())
+		strcpy(msg, "On");
+	else
+		strcpy(msg, "Off");
+	a.sendApp(msg, sizeof(msg));
+
+}
+
+//?????????????????????????????????????????????????????????????????????????????????????????????
 /**
  * @brief reads the sensors and stores the values in the buffers
  *
@@ -99,7 +347,7 @@ void taskReadSensors(int values[4]) {
  */
 void* taskTakePhoto(void*) {
 	while (1) {
-		system("raspistill -o [nome]");
+		//system("raspistill -o [nome]");
 		sleep(86400);
 	}
 	return NULL;
@@ -283,11 +531,11 @@ void* taskActuateHeater(void*) {//GPIO24
 		
 		
 		
-		for(int i=1;i<4;i++)
+		for (int i=0;i<4;i++)
 			if(tHeaterPower)
 				heater.actuate(tHeaterPower);
 			else
-				sleep(1);
+				sleep(4);
 	}
 	return NULL;
 }
@@ -399,7 +647,6 @@ void* taskCheckWifiDataReception(void*) {
  */
 void setAirTemperature(int value) {
 	refTemperature = value;
-	return NULL;
 }
 /**
  * @brief sets the air humidity reference to a value given from the mobile app
@@ -408,7 +655,6 @@ void setAirTemperature(int value) {
  */
 void setAirHumidity(int value) {
 	refHumidity = value;
-	return NULL;
 }
 
 //?????????????????????????????????????????????????????????????????????????????????????????????
@@ -456,13 +702,6 @@ int main(int count, char* args[])
 		
 	//set text color to normal
 	printf("\033[0;37m");
-
-	a.init();
-	if(a.connectWifi())
-		printf("CONNECTED!!\n");
-	else
-		printf("ERROR\n");
-	
 	
 	//init the system classes
 	waterPump.init();//GPIO25
@@ -473,8 +712,8 @@ int main(int count, char* args[])
 	
 	
 	//set the startup reference control values
-	refTemperature=20;
-	refHumidity=100;
+	refTemperature=18;
+	refHumidity=90;
 	
 	
 	//setup the database
@@ -559,7 +798,7 @@ int main(int count, char* args[])
 	
 	
 		
-	
+	/*
 	msgq_id = mq_open(MSGQOBJ_NAME, O_RDWR | O_CREAT, S_IRWXU | S_IRWXG, NULL);
 	if (msgq_id == (mqd_t)-1) {
 		perror("In mq_open()");
@@ -567,7 +806,7 @@ int main(int count, char* args[])
 	}
 	
 	mq_close(msgq_id);
-	
+	*/
 	msgq_id = mq_open(MSGQOBJ_NAME, O_RDWR | O_CREAT, S_IRWXU | S_IRWXG, NULL);
 	if (msgq_id == (mqd_t)-1) {
 		perror("In mq_open()");
@@ -586,7 +825,7 @@ int main(int count, char* args[])
 		printf("Deamon PID: %d\n", pid);
 		signal(SIGALRM, acquireSensorData); // set signal (alarm)
 		struct itimerval itv1;
-		itv1.it_interval.tv_sec = itv1.it_value.tv_sec = 5;
+		itv1.it_interval.tv_sec = itv1.it_value.tv_sec = 4;
 		itv1.it_interval.tv_usec = itv1.it_value.tv_usec = 0;
 		setitimer(ITIMER_REAL, &itv1, NULL);
 			
@@ -619,7 +858,7 @@ int main(int count, char* args[])
 	//MAIN LOOP
 	while (1)
 	{
-		sleep(5);
+		sleep(4);
 		int values[4];
 		taskReadSensors(values);
 		std::string msg = std::to_string(values[0]) + std::to_string(values[1]) + std::to_string(values[2]) + std::to_string(values[3]);

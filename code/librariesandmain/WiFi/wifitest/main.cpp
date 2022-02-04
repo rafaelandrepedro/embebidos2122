@@ -88,22 +88,43 @@ void* turn(void* command){
 void* dataRequest(void* command){
 	printf("Enviar os dados\n");
 	char msg[128];
-	strcpy(msg, "airTemp 20");
+	static bool st=true;
+	if(st=!st){
+	strcpy(msg, "20");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "airHum 30");
+	strcpy(msg, "30");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "waterTemp 40");
+	strcpy(msg, "40");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "lightLevel 50");
+	strcpy(msg, "50");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "heater on");
+	strcpy(msg, "On");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "waterPump off");
+	strcpy(msg, "Off");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "light on");
+	strcpy(msg, "On");
 	a.sendApp(msg, sizeof(msg));
-	strcpy(msg, "window off");
+	strcpy(msg, "Off");
 	a.sendApp(msg, sizeof(msg));
+	}
+	else{
+	strcpy(msg, "30");
+	a.sendApp(msg, sizeof(msg));
+	strcpy(msg, "20");
+	a.sendApp(msg, sizeof(msg));
+	strcpy(msg, "50");
+	a.sendApp(msg, sizeof(msg));
+	strcpy(msg, "40");
+	a.sendApp(msg, sizeof(msg));
+	strcpy(msg, "Off");
+	a.sendApp(msg, sizeof(msg));
+	strcpy(msg, "On");
+	a.sendApp(msg, sizeof(msg));
+	strcpy(msg, "Off");
+	a.sendApp(msg, sizeof(msg));
+	strcpy(msg, "On");
+	a.sendApp(msg, sizeof(msg));
+	}
 }
 
 int main()

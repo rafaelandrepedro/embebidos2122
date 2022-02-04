@@ -1,5 +1,8 @@
 #include "wifi.h"
 
+void panic(char *msg);
+#define panic(m)	{perror(m); abort();}
+
 struct sockaddr_in addr;
 
 WifiCOM::WifiCOM(){}

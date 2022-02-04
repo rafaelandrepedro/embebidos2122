@@ -34,7 +34,9 @@ void Heater::actuate(unsigned int dutycycle)
         turnOn();
         usleep(dutycycle*10000);
         turnOff();
+        heaterState=1;
         usleep(1000000-dutycycle*10000);
+        heaterState=0;
     }
 }
 

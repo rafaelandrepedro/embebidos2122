@@ -16,11 +16,10 @@
 #include <signal.h>
 
 
-#define PORTNUM 5003
+#define PORTNUM 5001
 #define CONNECTION_NUM 2
 
-void panic(char *msg);
-#define panic(m)	{perror(m); abort();}
+
 
 class WifiCOM{
     private:

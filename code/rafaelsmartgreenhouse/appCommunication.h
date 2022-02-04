@@ -6,6 +6,7 @@
 #include <sstream>
 #include "wifi.h"
 #include "parser.h"
+#include "main2.h"
 
 void tomato();
 
