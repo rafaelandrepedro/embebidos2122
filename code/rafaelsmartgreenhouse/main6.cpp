@@ -18,7 +18,7 @@
 #include <mqueue.h>   /* mq_* functions */
 
 /* name of the POSIX object referencing the queue */
-#define MSGQOBJ_NAME    "/myqueue12345890"
+#define MSGQOBJ_NAME    "/myqueue12345891"
 /* max length of a message (just for this process) */
 #define MAX_MSG_LEN     10000
 

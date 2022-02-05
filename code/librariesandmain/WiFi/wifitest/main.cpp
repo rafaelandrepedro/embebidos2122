@@ -140,13 +140,20 @@ int main()
     if(a.connectWifi())
        printf("CONNECTED!!\n");
     else
-       printf("ERROR\n");
+      printf("ERROR\n");
 
+<<<<<<< Updated upstream
 	while(1){
     		a.recvApp(msg, sizeof(msg));
     		printf("%s\n", msg);
     		parser.search(std::string(msg));
     	}
     a.sendApp(msg, sizeof(msg));
+=======
+    a.send_image();	
+
+    while(1)
+       1;
+>>>>>>> Stashed changes
     return 0;
 }

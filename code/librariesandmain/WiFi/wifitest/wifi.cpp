@@ -43,6 +43,28 @@ bool WifiCOM::connectWifi()
 
 }
 
+
+
+int WifiCOM::send_image()
+{
+     FILE *in = fopen("test.jpeg","r");
+    char Buffer[2] = "";
+    int len;
+    while ((len = fread(Buffer,sizeof(Buffer),1, in)) > 0)
+    {            
+        send(socket_app,Buffer,sizeof(Buffer),0);            
+    }
+    send(socket_app,"Hi",sizeof(Buffer),0);
+
+    char Buf[BUFSIZ];
+    recv(socket_app, Buf, BUFSIZ, 0);
+    if ( strcmp (Buf,"ACK") == 0  )
+    {
+        printf("Recive ACK\n");
+    }        
+}
+
+
 void WifiCOM::sendApp(char msg[], int size)
 {
     send(socket_app, msg, size, 0);

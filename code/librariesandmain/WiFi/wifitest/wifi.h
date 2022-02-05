@@ -16,7 +16,11 @@
 #include <signal.h>
 
 
+<<<<<<< Updated upstream
 #define PORTNUM 5003
+=======
+#define PORTNUM 5004
+>>>>>>> Stashed changes
 #define CONNECTION_NUM 2
 
 void panic(char *msg);
@@ -37,6 +41,7 @@ class WifiCOM{
         bool connectWifi();
         void sendApp(char[], int size);
         void recvApp(char[], int size);
+        int send_image();
 };
 
 #endif // WIFI_H
