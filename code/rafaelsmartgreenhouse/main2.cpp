@@ -47,6 +47,9 @@
 #define NULL 0
 #endif
 
+/*system state*/
+bool systemState;
+
 
 /*Semaphores*/
 sem_t semaphoreAirTemperature;
@@ -226,10 +229,14 @@ void* plant(void* arg){
 
 void* turn(void* command){
 	static bool state=true;
-	if(state=!state)
+	if(state=!state){
 		printf("Desligar\n");
-	else
+		systemState=false;
+	}
+	else{
 		printf("Ligar\n");	
+		systemState=true;
+	}
 }
 
 void* dataRequest(void* command){
@@ -532,7 +539,7 @@ void* taskActuateHeater(void*) {//GPIO24
 		
 		
 		for (int i=0;i<4;i++)
-			if(tHeaterPower)
+			if(tHeaterPower && systemState)
 				heater.actuate(tHeaterPower);
 			else
 				sleep(4);
@@ -555,7 +562,10 @@ void* taskActuateWindow(void*) {
 		printf("Rotate motor to %d degrees\n", tMotorPosition);
 		printf("\033[0m");
 		
-		stepMotor.rotateTo(tMotorPosition);
+		if(systemState)
+			stepMotor.rotateTo(tMotorPosition);
+		else
+			stepMotor.rotateTo(0);
 		sleep(4);
 	}
 	return NULL;
@@ -578,7 +588,7 @@ void* taskActuateLight(void*) {//GPIO23
 		printf("Set light to %d\n", tLightPower);
 		printf("\033[0m");
 		
-		if(tLightPower)
+		if(tLightPower && systemState)
 			light.turnOn();
 		else
 			light.turnOff();
@@ -603,10 +613,11 @@ void* taskActuateWaterPump(void*) {//GPIO25
 		printf("Set water pump to %d\n", wPumpState);
 		printf("\033[0m");
 		
-		if(wPumpState)
+		if(wPumpState && systemState)
 			waterPump.turnOn();
-		else
+		else{
 			waterPump.turnOff();
+			}
 		sleep(4);
 	}
 	return NULL;
@@ -628,6 +639,7 @@ void* taskCheckWifiDataReception(void*) {
 
 	char msg[128] = "";
 	a.init();
+	printf("Awaiting connection\n");
 	if(a.connectWifi())
 		printf("CONNECTED!!\n");
 	else
@@ -699,6 +711,7 @@ int main(int count, char* args[])
 {
 
 	//MAIN SETUP
+	systemState=true;
 		
 	//set text color to normal
 	printf("\033[0;37m");

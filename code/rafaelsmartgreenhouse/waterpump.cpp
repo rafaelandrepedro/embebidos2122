@@ -23,7 +23,7 @@ void WaterPump::turnOn()
 
 void WaterPump::turnOff()
 {
-    system("echo 0 > /dev/light0");
+    system("echo 0 > /dev/waterpump0");
     this->waterpumpState = 0;
 }
 
