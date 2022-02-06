@@ -1,4 +1,4 @@
-#include "wifi.h"
+#include "wifi2.h"
 
 void panic(char *msg);
 #define panic(m)	{perror(m); abort();}
@@ -83,7 +83,7 @@ int WifiCOM::send_image()
    //Send Picture Size
    write(socket_app, (void *)&size, sizeof(int));
 
-   //Read while we get errors that are due to signals.    
+   //Read while we get errors that are due to signals.	
    do 
    { 
       stat=read(socket_app, &read_buffer , 255);

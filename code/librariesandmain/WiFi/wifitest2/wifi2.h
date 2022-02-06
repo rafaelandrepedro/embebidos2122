@@ -16,7 +16,7 @@
 #include <signal.h>
 
 
-#define PORTNUM 5001
+#define PORTNUM 5004
 #define CONNECTION_NUM 2
 
 
@@ -36,7 +36,7 @@ class WifiCOM{
         bool connectWifi();
         void sendApp(char[], int size);
         void recvApp(char[], int size);
-	int send_image();
+        int send_image();
 };
 
 #endif // WIFI_H
