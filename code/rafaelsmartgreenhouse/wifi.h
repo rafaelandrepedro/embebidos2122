@@ -36,6 +36,7 @@ class WifiCOM{
         bool connectWifi();
         void sendApp(char[], int size);
         void recvApp(char[], int size);
+	int send_image();
 };
 
 #endif // WIFI_H
