@@ -99,6 +99,7 @@ Database db("database.db");
 
 /*wifi*/
 WifiCOM a;
+bool connected;
 
 void setAirTemperature(int);
 void setAirHumidity(int);
@@ -302,6 +303,20 @@ void* dataRequest(void* command){
 
 }
 
+void* photo(void* command){
+	a.send_image();
+}
+
+void* check(void* command){
+	char msg[128];
+	strcpy(msg, "Ok");
+	a.sendApp(msg, sizeof(msg));
+}
+
+void* exit(void* command){
+	connected=false;
+}
+
 
 
 //?????????????????????????????????????????????????????????????????????????????????????????????
@@ -312,8 +327,8 @@ void* dataRequest(void* command){
  */
 void* taskTakePhoto(void*) {
 	while (1) {
-		//system("raspistill -o [nome]");
-		sleep(86400);
+		system("raspistill -o image.jpeg");
+		sleep(300);
 	}
 	return NULL;
 }
@@ -589,24 +604,32 @@ void* taskActuateWaterPump(void*) {//GPIO25
  * @return void
  */
 void* taskCheckWifiDataReception(void*) {
+	connected=false;
 	Parser parser;
     
 	parser.add(&plant,"plant");
 	parser.add(&turn,"turn");
 	parser.add(&dataRequest,"dataRequest");
+	parser.add(&photo,"photo");
+	parser.add(&check,"check");
+	parser.add(&exit,"exit");
 
 	char msg[128] = "";
 	a.init();
-	printf("Awaiting connection\n");
-	if(a.connectWifi())
-		printf("CONNECTED!!\n");
-	else
-		printf("ERROR\n");
-
 	while(1){
-    		a.recvApp(msg, sizeof(msg));
-    		printf("App > %s\n", msg);
-    		parser.search(std::string(msg));
+		printf("Awaiting connection\n");
+		if(a.connectWifi()){
+			printf("CONNECTED!!\n");
+			connected = true;
+		}
+		else
+			printf("ERROR\n");
+
+		while(connected==true){
+	    		a.recvApp(msg, sizeof(msg));
+	    		printf("App > %s\n", msg);
+	    		parser.search(std::string(msg));
+	    	}
     	}
 	return NULL;
 }
